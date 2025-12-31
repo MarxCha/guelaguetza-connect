@@ -3,7 +3,8 @@ export enum ViewState {
   TRANSPORT = 'TRANSPORT',
   AR_SCANNER = 'AR_SCANNER',
   STORIES = 'STORIES',
-  CHAT = 'CHAT'
+  CHAT = 'CHAT',
+  PROGRAM = 'PROGRAM'
 }
 
 export interface BusRoute {

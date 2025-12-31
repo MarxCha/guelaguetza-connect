@@ -4,9 +4,10 @@ import HomeView from './components/HomeView';
 import TransportView from './components/TransportView';
 import StoriesView from './components/StoriesView';
 import ChatAssistant from './components/ChatAssistant';
+import ProgramView from './components/ProgramView';
 import { ViewState } from './types';
 
-// Lazy load ARScanner to avoid React 19 compatibility issues with @react-three/fiber
+// Lazy load ARScanner for code splitting
 const ARScanner = lazy(() => import('./components/ARScanner'));
 
 const App: React.FC = () => {
@@ -28,6 +29,8 @@ const App: React.FC = () => {
         return <StoriesView />;
       case ViewState.CHAT:
         return <ChatAssistant />;
+      case ViewState.PROGRAM:
+        return <ProgramView />;
       default:
         return <HomeView setView={setCurrentView} />;
     }
