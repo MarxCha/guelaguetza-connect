@@ -21,7 +21,12 @@
       "Bash(git init:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "mcp__MCP_DOCKER__browser_snapshot"
+      "mcp__MCP_DOCKER__browser_snapshot",
+      "Bash(npm run build:*)",
+      "mcp__MCP_DOCKER__browser_press_key",
+      "mcp__MCP_DOCKER__browser_type",
+      "mcp__MCP_DOCKER__browser_fill_form",
+      "Bash(npm install:*)"
     ]
   }
 }
