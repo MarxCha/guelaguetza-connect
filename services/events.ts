@@ -12,6 +12,8 @@ export type EventCategory =
   | 'DESFILE'
   | 'OTRO';
 
+export type TicketStatus = 'AVAILABLE' | 'FEW_LEFT' | 'SOLD_OUT' | 'FREE';
+
 export interface Event {
   id: string;
   title: string;
@@ -27,6 +29,8 @@ export interface Event {
   rsvpCount: number;
   hasRSVP?: boolean;
   hasReminder?: boolean;
+  ticketStatus?: TicketStatus;
+  maxCapacity?: number;
 }
 
 export interface EventDetail extends Event {
@@ -267,4 +271,95 @@ export function getCategoryIcon(category: EventCategory): string {
     OTRO: '📅',
   };
   return icons[category] || '📅';
+}
+
+// Get ticket status for an event (simulated based on rsvpCount for official events)
+export function getTicketStatus(event: Event): TicketStatus {
+  if (event.ticketStatus) return event.ticketStatus;
+  if (!event.isOfficial) return 'FREE';
+
+  // Simulate availability based on rsvpCount
+  const capacity = event.maxCapacity || 500;
+  const occupancyRate = event.rsvpCount / capacity;
+
+  if (occupancyRate >= 0.95) return 'SOLD_OUT';
+  if (occupancyRate >= 0.8) return 'FEW_LEFT';
+  return 'AVAILABLE';
+}
+
+// Get ticket status label
+export function getTicketStatusLabel(status: TicketStatus): string {
+  const labels: Record<TicketStatus, string> = {
+    AVAILABLE: 'Disponible',
+    FEW_LEFT: 'Últimos boletos',
+    SOLD_OUT: 'Agotado',
+    FREE: 'Entrada libre',
+  };
+  return labels[status];
+}
+
+// Get ticket status color
+export function getTicketStatusColor(status: TicketStatus): { bg: string; text: string } {
+  const colors: Record<TicketStatus, { bg: string; text: string }> = {
+    AVAILABLE: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-600 dark:text-green-400' },
+    FEW_LEFT: { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-600 dark:text-amber-400' },
+    SOLD_OUT: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-600 dark:text-red-400' },
+    FREE: { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-600 dark:text-blue-400' },
+  };
+  return colors[status];
+}
+
+// Generate Google Calendar link
+export function generateGoogleCalendarLink(event: Event): string {
+  const startDate = new Date(event.startDate);
+  const endDate = event.endDate ? new Date(event.endDate) : new Date(startDate.getTime() + 2 * 60 * 60 * 1000); // Default 2 hours
+
+  const formatDate = (date: Date) => date.toISOString().replace(/-|:|\.\d+/g, '').slice(0, 15) + 'Z';
+
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: event.title,
+    dates: `${formatDate(startDate)}/${formatDate(endDate)}`,
+    details: event.description,
+    location: event.location,
+  });
+
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
+// Generate iCal/ICS file content
+export function generateICalContent(event: Event): string {
+  const startDate = new Date(event.startDate);
+  const endDate = event.endDate ? new Date(event.endDate) : new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
+
+  const formatDate = (date: Date) => date.toISOString().replace(/-|:|\.\d+/g, '').slice(0, 15) + 'Z';
+
+  return `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Guelaguetza Connect//ES
+BEGIN:VEVENT
+UID:${event.id}@guelaguetza-connect
+DTSTAMP:${formatDate(new Date())}
+DTSTART:${formatDate(startDate)}
+DTEND:${formatDate(endDate)}
+SUMMARY:${event.title}
+DESCRIPTION:${event.description.replace(/\n/g, '\\n')}
+LOCATION:${event.location}
+END:VEVENT
+END:VCALENDAR`;
+}
+
+// Download iCal file
+export function downloadICalFile(event: Event): void {
+  const content = generateICalContent(event);
+  const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${event.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.ics`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }

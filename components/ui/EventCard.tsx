@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, MapPin, Users, Clock, Ticket, Star } from 'lucide-react';
+import { Calendar, MapPin, Users, Clock, Ticket, Star, CalendarPlus, AlertCircle } from 'lucide-react';
 import {
   Event,
   formatEventDate,
@@ -7,6 +7,10 @@ import {
   getCategoryLabel,
   getCategoryColor,
   getCategoryIcon,
+  getTicketStatus,
+  getTicketStatusLabel,
+  getTicketStatusColor,
+  generateGoogleCalendarLink,
 } from '../../services/events';
 
 interface EventCardProps {
@@ -21,6 +25,10 @@ const expandLocation = (location: string): string => {
     'CCCO': 'Centro Cultural y de Convenciones de Oaxaca',
     'CASA': 'Centro de las Artes de San Agustín',
     'MUPO': 'Museo de los Pintores Oaxaqueños',
+    'IAGO': 'Instituto de Artes Gráficas de Oaxaca',
+    'MACO': 'Museo de Arte Contemporáneo de Oaxaca',
+    'FAHHO': 'Fundación Alfredo Harp Helú Oaxaca',
+    'UABJO': 'Universidad Autónoma Benito Juárez de Oaxaca',
   };
 
   for (const [abbr, full] of Object.entries(abbreviations)) {
@@ -52,7 +60,8 @@ const EventCard: React.FC<EventCardProps> = ({
 }) => {
   const categoryColor = getCategoryColor(event.category);
   const imageUrl = event.imageUrl || getCategoryDefaultImage(event.category);
-  const isPaidEvent = event.isOfficial; // Official events typically require tickets
+  const ticketStatus = getTicketStatus(event);
+  const statusColors = getTicketStatusColor(ticketStatus);
 
   if (compact) {
     return (
@@ -80,6 +89,12 @@ const EventCard: React.FC<EventCardProps> = ({
               <Star size={14} className="text-oaxaca-yellow fill-oaxaca-yellow drop-shadow" />
             </div>
           )}
+          {/* Sold out overlay */}
+          {ticketStatus === 'SOLD_OUT' && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+              <span className="text-white text-[10px] font-bold bg-red-600 px-2 py-0.5 rounded">AGOTADO</span>
+            </div>
+          )}
         </div>
 
         {/* Info */}
@@ -97,11 +112,26 @@ const EventCard: React.FC<EventCardProps> = ({
               <Users size={12} />
               <span>{event.rsvpCount} asistirán</span>
             </div>
-            {/* Ticket CTA for paid events */}
-            {isPaidEvent && (
-              <span className="px-2 py-0.5 bg-oaxaca-pink text-white text-[10px] font-bold rounded-full flex items-center gap-1">
-                <Ticket size={10} />
-                Boletos
+            {/* Ticket status badge */}
+            {event.isOfficial ? (
+              ticketStatus === 'SOLD_OUT' ? (
+                <span className="px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-[10px] font-bold rounded-full">
+                  Agotado
+                </span>
+              ) : ticketStatus === 'FEW_LEFT' ? (
+                <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 text-[10px] font-bold rounded-full flex items-center gap-1 animate-pulse">
+                  <AlertCircle size={10} />
+                  Últimos!
+                </span>
+              ) : (
+                <span className="px-2 py-0.5 bg-oaxaca-pink text-white text-[10px] font-bold rounded-full flex items-center gap-1">
+                  <Ticket size={10} />
+                  Boletos
+                </span>
+              )
+            ) : (
+              <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] font-medium rounded-full">
+                Entrada libre
               </span>
             )}
           </div>
@@ -165,23 +195,58 @@ const EventCard: React.FC<EventCardProps> = ({
           </div>
         </div>
 
+        {/* Ticket Status Banner */}
+        {event.isOfficial && ticketStatus !== 'AVAILABLE' && (
+          <div className={`flex items-center justify-center gap-2 py-2 ${statusColors.bg} ${statusColors.text}`}>
+            {ticketStatus === 'SOLD_OUT' && <AlertCircle size={14} />}
+            {ticketStatus === 'FEW_LEFT' && <AlertCircle size={14} className="animate-pulse" />}
+            <span className="text-xs font-semibold">{getTicketStatusLabel(ticketStatus)}</span>
+          </div>
+        )}
+
         {/* Footer */}
         <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
-          <div className="flex items-center gap-1 text-sm text-gray-500">
-            <Users size={16} />
-            <span>{event.rsvpCount} asistirán</span>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 text-sm text-gray-500">
+              <Users size={16} />
+              <span>{event.rsvpCount}</span>
+            </div>
+            {/* Add to Calendar button */}
+            <a
+              href={generateGoogleCalendarLink(event)}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center gap-1 px-2 py-1 text-xs text-gray-500 hover:text-oaxaca-purple hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-full transition"
+              title="Añadir a Google Calendar"
+            >
+              <CalendarPlus size={14} />
+              <span className="hidden sm:inline">Calendario</span>
+            </a>
           </div>
 
           {event.hasRSVP ? (
             <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-xs font-medium rounded-full">
               Confirmado
             </span>
-          ) : isPaidEvent ? (
-            <span className="px-3 py-1.5 bg-oaxaca-pink hover:bg-oaxaca-pink/90 text-white text-xs font-bold rounded-full flex items-center gap-1 shadow-sm">
-              <Ticket size={12} />
-              Obtener boletos
+          ) : event.isOfficial ? (
+            ticketStatus === 'SOLD_OUT' ? (
+              <span className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-xs font-medium rounded-full cursor-not-allowed">
+                Agotado
+              </span>
+            ) : (
+              <span className={`px-3 py-1.5 text-white text-xs font-bold rounded-full flex items-center gap-1 shadow-sm ${
+                ticketStatus === 'FEW_LEFT' ? 'bg-amber-500 hover:bg-amber-600 animate-pulse' : 'bg-oaxaca-pink hover:bg-oaxaca-pink/90'
+              }`}>
+                <Ticket size={12} />
+                {ticketStatus === 'FEW_LEFT' ? 'Últimos boletos!' : 'Obtener boletos'}
+              </span>
+            )
+          ) : (
+            <span className="px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-medium rounded-full">
+              Entrada libre
             </span>
-          ) : null}
+          )}
         </div>
       </div>
     </button>
