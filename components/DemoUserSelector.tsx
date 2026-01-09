@@ -42,7 +42,14 @@ const DemoUserSelector: React.FC<DemoUserSelectorProps> = ({ compact = false }) 
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const currentUserType = user?.role === 'ADMIN' ? 'admin' : 'user';
+  // Map user role to demo user type
+  const roleToType: Record<string, 'user' | 'seller' | 'host' | 'admin'> = {
+    'USER': 'user',
+    'SELLER': 'seller',
+    'HOST': 'host',
+    'ADMIN': 'admin',
+  };
+  const currentUserType = roleToType[user?.role || 'USER'] || 'user';
   const currentDemo = DEMO_USERS.find(d => d.type === currentUserType) || DEMO_USERS[0];
 
   const handleSelect = async (type: 'user' | 'seller' | 'admin' | 'host') => {
