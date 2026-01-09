@@ -191,6 +191,13 @@ export default function ARMapView({ onNavigate, onBack }: ARMapViewProps) {
           <MapContainer
             center={[userLocation?.lat || DEFAULT_LAT, userLocation?.lng || DEFAULT_LNG]}
             zoom={14}
+            minZoom={12}
+            maxZoom={18}
+            maxBounds={[
+              [16.85, -96.85], // Southwest corner of Oaxaca area
+              [17.25, -96.60], // Northeast corner of Oaxaca area
+            ]}
+            maxBoundsViscosity={1.0}
             className="h-full w-full z-0"
             zoomControl={false}
           >

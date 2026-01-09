@@ -447,6 +447,13 @@ const TransportView: React.FC<TransportViewProps> = ({ onBack }) => {
         <MapContainer
           center={mapCenter}
           zoom={14}
+          minZoom={12}
+          maxZoom={18}
+          maxBounds={[
+            [16.85, -96.85], // Southwest corner of Oaxaca area
+            [17.25, -96.60], // Northeast corner of Oaxaca area
+          ]}
+          maxBoundsViscosity={1.0}
           className="absolute inset-0 z-10"
           ref={mapRef}
           zoomControl={false}
