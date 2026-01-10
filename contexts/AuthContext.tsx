@@ -21,7 +21,7 @@ interface AuthContextType {
   isDemoMode: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   loginWithFace: (faceImage: string) => Promise<boolean>;
-  loginAsDemo: (userType?: 'user' | 'seller' | 'admin' | 'host') => Promise<boolean>;
+  loginAsDemo: (userType?: 'user' | 'seller' | 'admin') => Promise<boolean>;
   register: (data: RegisterData) => Promise<boolean>;
   logout: () => void;
   updateProfile: (data: Partial<User>) => Promise<boolean>;
@@ -55,14 +55,6 @@ const DEMO_USERS = {
     apellido: 'Gonzalez',
     region: 'Valles Centrales',
     role: 'SELLER' as UserRole,
-  },
-  host: {
-    email: 'guia@guelaguetza.mx',
-    password: 'password123',
-    nombre: 'Roberto',
-    apellido: 'Hernandez',
-    region: 'Valles Centrales',
-    role: 'HOST' as UserRole,
   },
   admin: {
     email: 'admin@guelaguetza.mx',
@@ -108,7 +100,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   // Function to login as demo user
-  const loginAsDemo = async (userType: 'user' | 'seller' | 'admin' | 'host' = 'user'): Promise<boolean> => {
+  const loginAsDemo = async (userType: 'user' | 'seller' | 'admin' = 'user'): Promise<boolean> => {
     const demoUser = DEMO_USERS[userType];
 
     try {

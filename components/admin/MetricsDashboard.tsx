@@ -121,15 +121,18 @@ const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ onBack, onNavigate 
               <button
                 onClick={handleRefresh}
                 className={`p-2 hover:bg-white/10 rounded-full transition ${refreshing ? 'animate-spin' : ''}`}
+                title="Actualizar datos"
               >
                 <RefreshCw size={18} />
               </button>
               {onNavigate && (
                 <button
                   onClick={() => onNavigate(ViewState.HOME)}
-                  className="p-2 hover:bg-white/10 rounded-full transition"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-full transition"
+                  title="Ver la app como usuario"
                 >
-                  <Home size={18} />
+                  <Eye size={16} />
+                  <span className="text-xs font-medium hidden sm:inline">Ver App</span>
                 </button>
               )}
             </div>

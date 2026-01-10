@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Users,
   ShoppingBag,
-  Compass,
   Shield,
   ChevronRight,
   Sparkles,
@@ -34,29 +33,20 @@ const USER_TYPES = [
   {
     type: 'seller' as const,
     name: 'Artesano / Vendedor',
-    title: 'Soy Artesano',
-    description: 'Vende tus productos artesanales, conecta con compradores y muestra tu trabajo al mundo.',
+    title: 'Soy Vendedor',
+    description: 'Vende productos artesanales, ofrece tours y experiencias, gestiona pedidos y reservas.',
     icon: ShoppingBag,
     color: 'from-amber-500 to-orange-600',
-    features: ['Tienda virtual', 'Gestion de productos', 'Pedidos y ventas', 'Promocion de artesanias'],
-  },
-  {
-    type: 'host' as const,
-    name: 'Guia Turistico',
-    title: 'Soy Guia',
-    description: 'Ofrece tours y experiencias, ayuda a los turistas a descubrir lo mejor de Oaxaca.',
-    icon: Compass,
-    color: 'from-emerald-500 to-teal-600',
-    features: ['Crear experiencias', 'Gestionar reservas', 'Chat con turistas', 'Rutas personalizadas'],
+    features: ['Gestiona productos', 'Crea experiencias', 'Pedidos y reservas', 'Estadisticas de ventas'],
   },
   {
     type: 'admin' as const,
     name: 'Administrador',
     title: 'Administrador',
-    description: 'Accede al panel de metricas y estadisticas de uso de la plataforma.',
+    description: 'Panel de metricas, estadisticas de uso y gestion de la plataforma.',
     icon: Shield,
     color: 'from-purple-500 to-violet-600',
-    features: ['Metricas de uso', 'Estadisticas en vivo', 'Reportes de actividad', 'Analisis de datos'],
+    features: ['Dashboard de metricas', 'Gestion de usuarios', 'Ver app como usuario', 'Reportes de actividad'],
   },
 ];
 
@@ -73,7 +63,7 @@ const LandingView: React.FC<LandingViewProps> = ({ onUserSelected }) => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleSelectUser = async (type: 'user' | 'seller' | 'admin' | 'host') => {
+  const handleSelectUser = async (type: 'user' | 'seller' | 'admin') => {
     setLoading(type);
     setSelectedType(type);
     await loginAsDemo(type);
@@ -81,7 +71,6 @@ const LandingView: React.FC<LandingViewProps> = ({ onUserSelected }) => {
     const roleMap: Record<string, string> = {
       user: 'USER',
       seller: 'SELLER',
-      host: 'HOST',
       admin: 'ADMIN',
     };
     setTimeout(() => {

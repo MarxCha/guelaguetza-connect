@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Users, Shield, ShoppingBag, Compass, ChevronDown, Check } from 'lucide-react';
+import { Users, Shield, ShoppingBag, ChevronDown, Check } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface DemoUserSelectorProps {
   compact?: boolean;
+  onUserChange?: (userType: 'user' | 'seller' | 'admin') => void;
 }
 
 const DEMO_USERS = [
@@ -17,46 +18,43 @@ const DEMO_USERS = [
   {
     type: 'seller' as const,
     name: 'Vendedor Demo',
-    description: 'Artesano y comerciante',
+    description: 'Productos y experiencias',
     icon: ShoppingBag,
     color: 'from-amber-500 to-amber-600',
   },
   {
-    type: 'host' as const,
-    name: 'Guia Demo',
-    description: 'Guia turistico local',
-    icon: Compass,
-    color: 'from-green-500 to-green-600',
-  },
-  {
     type: 'admin' as const,
     name: 'Admin Demo',
-    description: 'Administrador del sistema',
+    description: 'Metricas y gestion',
     icon: Shield,
     color: 'from-purple-500 to-purple-600',
   },
 ];
 
-const DemoUserSelector: React.FC<DemoUserSelectorProps> = ({ compact = false }) => {
+const DemoUserSelector: React.FC<DemoUserSelectorProps> = ({ compact = false, onUserChange }) => {
   const { user, isDemoMode, loginAsDemo } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   // Map user role to demo user type
-  const roleToType: Record<string, 'user' | 'seller' | 'host' | 'admin'> = {
+  const roleToType: Record<string, 'user' | 'seller' | 'admin'> = {
     'USER': 'user',
     'SELLER': 'seller',
-    'HOST': 'host',
+    'HOST': 'seller', // Legacy: HOST maps to seller
     'ADMIN': 'admin',
   };
   const currentUserType = roleToType[user?.role || 'USER'] || 'user';
   const currentDemo = DEMO_USERS.find(d => d.type === currentUserType) || DEMO_USERS[0];
 
-  const handleSelect = async (type: 'user' | 'seller' | 'admin' | 'host') => {
+  const handleSelect = async (type: 'user' | 'seller' | 'admin') => {
     setIsLoading(true);
     await loginAsDemo(type);
     setIsLoading(false);
     setIsOpen(false);
+    // Notify parent to navigate to correct view
+    if (onUserChange) {
+      onUserChange(type);
+    }
   };
 
   if (!isDemoMode) return null;

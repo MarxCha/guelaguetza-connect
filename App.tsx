@@ -43,8 +43,10 @@ import DemoUserSelector from './components/DemoUserSelector';
 // Landing and role-specific views
 import LandingView from './components/LandingView';
 import GuideDashboard from './components/GuideDashboard';
+import SellerDashboard from './components/SellerDashboard';
 import SmartMapView from './components/SmartMapView';
 import { ViewState } from './types';
+import { Eye } from 'lucide-react';
 import { Participant } from './services/dm';
 import { useAuth } from './contexts/AuthContext';
 
@@ -58,6 +60,7 @@ const App: React.FC = () => {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [previousView, setPreviousView] = useState<ViewState>(ViewState.HOME);
   const [showLanding, setShowLanding] = useState(true);
+  const [adminViewingAsUser, setAdminViewingAsUser] = useState(false);
 
   // DM state
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
@@ -78,14 +81,14 @@ const App: React.FC = () => {
   // Handle user selection from landing - receives role directly to avoid race condition
   const handleUserSelected = (selectedRole?: string) => {
     setShowLanding(false);
+    setAdminViewingAsUser(false); // Reset admin view mode
     // Set initial view based on selected role
     const role = selectedRole || user?.role;
     if (role === 'ADMIN') {
       setCurrentView(ViewState.ADMIN);
-    } else if (role === 'HOST') {
-      setCurrentView(ViewState.GUIDE_DASHBOARD);
-    } else if (role === 'SELLER') {
-      setCurrentView(ViewState.TIENDA);
+    } else if (role === 'SELLER' || role === 'HOST') {
+      // Both SELLER and HOST (legacy) use the unified SellerDashboard
+      setCurrentView(ViewState.SELLER_DASHBOARD);
     } else {
       setCurrentView(ViewState.HOME);
     }
@@ -231,12 +234,25 @@ const App: React.FC = () => {
         return (
           <MetricsDashboard
             onBack={() => setShowLanding(true)}
+            onNavigate={(view: ViewState) => {
+              if (view === ViewState.HOME) {
+                setAdminViewingAsUser(true);
+              }
+              setCurrentView(view);
+            }}
+          />
+        );
+      case ViewState.SELLER_DASHBOARD:
+        return (
+          <SellerDashboard
+            onBack={() => setShowLanding(true)}
             onNavigate={(view: ViewState) => setCurrentView(view)}
           />
         );
       case ViewState.GUIDE_DASHBOARD:
+        // Legacy: redirect to SellerDashboard
         return (
-          <GuideDashboard
+          <SellerDashboard
             onBack={() => setShowLanding(true)}
             onNavigate={(view: ViewState) => setCurrentView(view)}
           />
@@ -432,15 +448,46 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-950 font-sans transition-colors">
       {/* Demo Mode Indicator */}
-      {isDemoMode && (
+      {isDemoMode && !adminViewingAsUser && (
         <div className="fixed top-0 left-0 right-0 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs py-1.5 px-4 z-50 flex items-center justify-between">
           <span className="hidden sm:inline">Modo Demo: {user?.nombre}</span>
           <span className="sm:hidden">Demo</span>
-          <DemoUserSelector compact />
+          <DemoUserSelector
+            compact
+            onUserChange={(type) => {
+              // Map demo type to role and navigate
+              const roleMap: Record<string, string> = {
+                user: 'USER',
+                seller: 'SELLER',
+                admin: 'ADMIN',
+              };
+              handleUserSelected(roleMap[type]);
+            }}
+          />
         </div>
       )}
 
-      <div className={`flex h-screen ${isDemoMode ? 'pt-6' : ''}`}>
+      {/* Admin Viewing as User Banner */}
+      {adminViewingAsUser && user?.role === 'ADMIN' && (
+        <div className="fixed top-0 left-0 right-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs py-2 px-4 z-50 flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <Eye size={14} />
+            <span className="hidden sm:inline">Modo Vista de Usuario - Administrador</span>
+            <span className="sm:hidden">Vista Usuario</span>
+          </span>
+          <button
+            onClick={() => {
+              setAdminViewingAsUser(false);
+              setCurrentView(ViewState.ADMIN);
+            }}
+            className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full transition text-xs font-medium"
+          >
+            Volver al Panel
+          </button>
+        </div>
+      )}
+
+      <div className={`flex h-screen ${isDemoMode || adminViewingAsUser ? 'pt-8' : ''}`}>
         {/* Sidebar Navigation - Desktop/Tablet */}
         {!hideNav && (
           <Navigation

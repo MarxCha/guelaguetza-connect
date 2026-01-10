@@ -1,8 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Calendar, PlayCircle, Camera, X, ChevronRight, Utensils, Wine, Coffee, IceCream, MessageCircle, Sparkles, ShoppingBag, Radio, Ticket, Map, Search, Users, CalendarDays, User, Heart, ChevronLeft } from 'lucide-react';
+import { MapPin, Calendar, PlayCircle, Camera, X, ChevronRight, Utensils, Wine, Coffee, IceCream, MessageCircle, Sparkles, ShoppingBag, Radio, Ticket, Map, Search, Users, CalendarDays, User, Heart, ChevronLeft, Star, Navigation, ExternalLink, Clock } from 'lucide-react';
 import { ViewState } from '../types';
 import { getWishlistCount } from '../services/marketplace';
 import { useLanguage, LanguageSelector } from '../contexts/LanguageContext';
+import {
+  GastronomyCategory,
+  GastronomyPlace,
+  GASTRONOMY_PLACES,
+  GASTRONOMY_CATEGORIES,
+  getCategoryLabel,
+  getCategoryColor,
+  getGoogleMapsUrl,
+  getGoogleMapsDirectionsUrl,
+} from '../services/gastronomy';
 
 const HERO_IMAGES = [
   '/images/guelaguetza-dancers.png',
@@ -14,11 +24,11 @@ interface HomeViewProps {
   setView: (view: ViewState) => void;
 }
 
-const GASTRO_ITEMS = [
-  { name: 'Tlayudas', desc: 'Tortilla gigante con asiento, frijoles y quesillo', icon: Utensils },
-  { name: 'Mezcal', desc: 'Destilado artesanal de agave oaxaqueño', icon: Wine },
-  { name: 'Chocolate', desc: 'Bebida tradicional de cacao y canela', icon: Coffee },
-  { name: 'Nieves', desc: 'Helados artesanales de sabores regionales', icon: IceCream },
+const GASTRO_ITEMS: { name: string; desc: string; icon: typeof Utensils; category: GastronomyCategory }[] = [
+  { name: 'Tlayudas', desc: 'Tortilla gigante con asiento, frijoles y quesillo', icon: Utensils, category: 'TLAYUDAS' },
+  { name: 'Mezcal', desc: 'Destilado artesanal de agave oaxaqueño', icon: Wine, category: 'MEZCAL' },
+  { name: 'Chocolate', desc: 'Bebida tradicional de cacao y canela', icon: Coffee, category: 'CHOCOLATE' },
+  { name: 'Nieves', desc: 'Helados artesanales de sabores regionales', icon: IceCream, category: 'NIEVES' },
 ];
 
 const DISCOVER_SLIDES = [
@@ -62,9 +72,15 @@ const DISCOVER_SLIDES = [
 const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
   const { t, greeting } = useLanguage();
   const [showGastroModal, setShowGastroModal] = useState(false);
+  const [selectedGastroCategory, setSelectedGastroCategory] = useState<GastronomyCategory | 'ALL'>('ALL');
   const [heroIndex, setHeroIndex] = useState(0);
   const [discoverIndex, setDiscoverIndex] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
+
+  // Filter gastronomy places by selected category
+  const filteredPlaces = selectedGastroCategory === 'ALL'
+    ? GASTRONOMY_PLACES
+    : GASTRONOMY_PLACES.filter(p => p.category === selectedGastroCategory);
 
   useEffect(() => {
     // Auto-advance hero carousel
@@ -460,11 +476,19 @@ const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
                 <h3 className="font-bold text-gray-800 dark:text-gray-100 mb-4">Gastronomía</h3>
                 <div className="space-y-3">
                   {GASTRO_ITEMS.map((item, index) => (
-                    <div key={index} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition">
+                    <div
+                      key={index}
+                      onClick={() => {
+                        setSelectedGastroCategory(item.category);
+                        setShowGastroModal(true);
+                      }}
+                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition"
+                    >
                       <div className="bg-oaxaca-yellow/20 p-2 rounded-full">
                         <item.icon size={16} className="text-oaxaca-purple" />
                       </div>
                       <span className="text-sm text-gray-700 dark:text-gray-300">{item.name}</span>
+                      <ChevronRight size={14} className="ml-auto text-gray-400" />
                     </div>
                   ))}
                 </div>
@@ -474,55 +498,167 @@ const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
         </div>
       </div>
 
-      {/* Gastronomy Modal */}
+      {/* Gastronomy Modal - Enhanced with real places */}
       {showGastroModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden animate-in slide-in-from-bottom duration-300">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg max-h-[85vh] overflow-hidden animate-in slide-in-from-bottom duration-300">
             {/* Modal Header */}
-            <div className="bg-oaxaca-purple p-4 text-white flex items-center justify-between">
-              <div>
-                <h3 className="font-bold text-lg">Gastronomía Oaxaqueña</h3>
-                <p className="text-xs text-white/70">Sabores que enamoran</p>
+            <div className="bg-gradient-to-r from-oaxaca-purple to-oaxaca-pink p-4 text-white">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h3 className="font-bold text-lg">Sabores de Oaxaca</h3>
+                  <p className="text-xs text-white/70">Lugares curados por locales</p>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowGastroModal(false);
+                    setSelectedGastroCategory('ALL');
+                  }}
+                  className="p-1 rounded-full hover:bg-white/20 transition"
+                >
+                  <X size={24} />
+                </button>
               </div>
-              <button
-                onClick={() => setShowGastroModal(false)}
-                className="p-1 rounded-full hover:bg-white/20 transition"
-              >
-                <X size={24} />
-              </button>
+
+              {/* Category Filter Tabs */}
+              <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+                <button
+                  onClick={() => setSelectedGastroCategory('ALL')}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition ${
+                    selectedGastroCategory === 'ALL'
+                      ? 'bg-white text-oaxaca-purple'
+                      : 'bg-white/20 text-white hover:bg-white/30'
+                  }`}
+                >
+                  Todos
+                </button>
+                {GASTRO_ITEMS.map((item) => (
+                  <button
+                    key={item.category}
+                    onClick={() => setSelectedGastroCategory(item.category)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition flex items-center gap-1.5 ${
+                      selectedGastroCategory === item.category
+                        ? 'bg-white text-oaxaca-purple'
+                        : 'bg-white/20 text-white hover:bg-white/30'
+                    }`}
+                  >
+                    <item.icon size={12} />
+                    {item.name}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* Modal Content */}
-            <div className="p-4 space-y-3 overflow-y-auto max-h-[60vh]">
-              {GASTRO_ITEMS.map((item, index) => (
-                <div key={index} className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-                  <div className="bg-oaxaca-yellow/20 p-3 rounded-full">
-                    <item.icon size={24} className="text-oaxaca-purple dark:text-oaxaca-yellow" />
+            {/* Places List */}
+            <div className="p-4 space-y-4 overflow-y-auto max-h-[55vh]">
+              {filteredPlaces.map((place) => (
+                <div
+                  key={place.id}
+                  className="bg-gray-50 dark:bg-gray-700/50 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-600"
+                >
+                  {/* Place Image and Info */}
+                  <div className="flex gap-3 p-3">
+                    <div className="relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden">
+                      <img
+                        src={place.imageUrl}
+                        alt={place.name}
+                        className="w-full h-full object-cover saturate-[1.2]"
+                      />
+                      {/* Category Badge */}
+                      <div
+                        className="absolute bottom-0 left-0 right-0 py-0.5 text-center text-[9px] font-medium text-white"
+                        style={{ backgroundColor: getCategoryColor(place.category) }}
+                      >
+                        {getCategoryLabel(place.category)}
+                      </div>
+                      {/* Reservation Badge */}
+                      {place.requiresReservation && (
+                        <div className="absolute top-1 right-1 bg-amber-500 p-0.5 rounded">
+                          <Clock size={10} className="text-white" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-gray-900 dark:text-gray-100 text-sm leading-tight">
+                        {place.name}
+                      </h4>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 flex items-center gap-1">
+                        <MapPin size={10} />
+                        {place.address}
+                      </p>
+                      <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 italic">
+                        "{place.vibe}"
+                      </p>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                          {place.priceRange}
+                        </span>
+                        {place.requiresReservation && (
+                          <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded">
+                            Reservar
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-bold text-gray-900 dark:text-gray-100">{item.name}</h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{item.desc}</p>
+
+                  {/* Must Try Section */}
+                  <div className="px-3 pb-2">
+                    <div className="flex items-start gap-1.5 text-xs">
+                      <Star size={12} className="text-oaxaca-yellow fill-oaxaca-yellow flex-shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-medium text-gray-700 dark:text-gray-300">El imperdible: </span>
+                        <span className="text-gray-600 dark:text-gray-400">{place.mustTry}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex border-t border-gray-200 dark:border-gray-600">
+                    <a
+                      href={getGoogleMapsUrl(place)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition"
+                    >
+                      <ExternalLink size={12} />
+                      Ver en Maps
+                    </a>
+                    <div className="w-px bg-gray-200 dark:bg-gray-600" />
+                    <a
+                      href={getGoogleMapsDirectionsUrl(place)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-oaxaca-purple dark:text-oaxaca-yellow hover:bg-purple-50 dark:hover:bg-purple-900/20 transition"
+                    >
+                      <Navigation size={12} />
+                      Cómo llegar
+                    </a>
                   </div>
                 </div>
               ))}
 
-              <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
-                <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                  Visita la Feria del Mezcal en el CCCO y el Mercado 20 de Noviembre para probar estos deliciosos platillos.
-                </p>
-              </div>
+              {/* Empty State */}
+              {filteredPlaces.length === 0 && (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 dark:text-gray-400">No hay lugares en esta categoría</p>
+                </div>
+              )}
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 border-t border-gray-100 dark:border-gray-700">
+            <div className="p-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
               <button
                 onClick={() => {
                   setShowGastroModal(false);
+                  setSelectedGastroCategory('ALL');
                   setView(ViewState.CHAT);
                 }}
-                className="w-full py-3 bg-oaxaca-pink text-white rounded-xl font-medium hover:bg-opacity-90 transition"
+                className="w-full py-3 bg-oaxaca-pink text-white rounded-xl font-medium hover:bg-opacity-90 transition flex items-center justify-center gap-2"
               >
-                Pregunta a GuelaBot por recomendaciones
+                <MessageCircle size={18} />
+                Pregunta a GuelaBot por más recomendaciones
               </button>
             </div>
           </div>
