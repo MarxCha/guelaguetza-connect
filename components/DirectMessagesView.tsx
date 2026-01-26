@@ -14,7 +14,7 @@ import PullToRefresh from './ui/PullToRefresh';
 import { SkeletonGrid } from './ui/LoadingSpinner';
 import SwipeAction from './ui/SwipeAction';
 import EmptyState from './ui/EmptyState';
-import { Avatar } from './ui/LazyImage';
+import Avatar from './ui/Avatar';
 import { SlideUp } from './ui/PageTransition';
 
 interface DirectMessagesViewProps {

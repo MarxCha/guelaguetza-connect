@@ -33,8 +33,9 @@ interface UploadResult {
 }
 
 export class UploadService {
-  private s3Client: S3Client;
-  private config: CDNConfig;
+  private s3Client: S3Client | null = null;
+  private config: CDNConfig | null = null;
+  private isEnabled: boolean = false;
   private defaultOptions: Required<UploadOptions> = {
     generateThumbnail: false,
     thumbnailWidth: 300,
@@ -44,8 +45,16 @@ export class UploadService {
   };
 
   constructor() {
-    this.config = this.loadConfig();
-    this.s3Client = this.createClient();
+    const config = this.loadConfig();
+    if (config) {
+      this.config = config;
+      this.s3Client = this.createClient();
+      this.isEnabled = true;
+    }
+  }
+
+  isConfigured(): boolean {
+    return this.isEnabled;
   }
 
   private loadConfig(): CDNConfig {
@@ -70,13 +79,16 @@ export class UploadService {
     }
 
     if (!config.bucket || !config.accessKeyId || !config.secretAccessKey) {
-      throw new Error('CDN configuration is incomplete. Check environment variables.');
+      console.warn('[UploadService] CDN configuration incomplete - upload features will be disabled');
+      return null as unknown as CDNConfig;
     }
 
     return config;
   }
 
-  private createClient(): S3Client {
+  private createClient(): S3Client | null {
+    if (!this.config) return null;
+
     const clientConfig: any = {
       region: this.config.region,
       credentials: {
@@ -100,6 +112,8 @@ export class UploadService {
   }
 
   private getPublicUrl(key: string): string {
+    if (!this.config) throw new AppError('Upload service not configured', 503);
+
     if (this.config.cdnUrl) {
       return this.config.cdnUrl + '/' + key;
     }
@@ -148,6 +162,10 @@ export class UploadService {
   }
 
   async uploadImage(buffer: Buffer, originalName: string, mimeType: string, options: Partial<UploadOptions> = {}): Promise<UploadResult> {
+    if (!this.isEnabled || !this.s3Client || !this.config) {
+      throw new AppError('Upload service not configured', 503);
+    }
+
     const mergedOptions = { ...this.defaultOptions, ...options };
     await this.validateFile(buffer, mimeType, mergedOptions);
     const optimizedBuffer = await this.optimizeImage(buffer, mimeType);
@@ -198,6 +216,9 @@ export class UploadService {
   }
 
   async deleteImage(key: string): Promise<void> {
+    if (!this.isEnabled || !this.s3Client || !this.config) {
+      throw new AppError('Upload service not configured', 503);
+    }
     try {
       await this.s3Client.send(new DeleteObjectCommand({ Bucket: this.config.bucket, Key: key }));
     } catch (error) {
@@ -206,6 +227,9 @@ export class UploadService {
   }
 
   async fileExists(key: string): Promise<boolean> {
+    if (!this.isEnabled || !this.s3Client || !this.config) {
+      return false;
+    }
     try {
       await this.s3Client.send(new HeadObjectCommand({ Bucket: this.config.bucket, Key: key }));
       return true;
@@ -215,11 +239,17 @@ export class UploadService {
   }
 
   async getSignedUrl(key: string, expiresIn: number = 3600): Promise<string> {
+    if (!this.isEnabled || !this.s3Client || !this.config) {
+      throw new AppError('Upload service not configured', 503);
+    }
     const command = new PutObjectCommand({ Bucket: this.config.bucket, Key: key });
     return getSignedUrl(this.s3Client, command, { expiresIn });
   }
 
   getConfig() {
+    if (!this.config) {
+      return { provider: 'disabled', bucket: '', region: '', cdnUrl: '', publicBucket: false };
+    }
     return {
       provider: this.config.provider,
       bucket: this.config.bucket,
