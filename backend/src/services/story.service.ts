@@ -69,59 +69,66 @@ export class StoryService {
   }
 
   async getById(id: string, userId?: string) {
-    const story = await this.prisma.story.findUnique({
-      where: { id },
-      include: {
-        user: {
-          select: {
-            id: true,
-            nombre: true,
-            avatar: true,
-          },
-        },
-        comments: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                nombre: true,
-                avatar: true,
-              },
+    // Ejecutar queries en paralelo para reducir latencia
+    const [story, likeStatus] = await Promise.all([
+      this.prisma.story.findUnique({
+        where: { id },
+        include: {
+          user: {
+            select: {
+              id: true,
+              nombre: true,
+              avatar: true,
             },
           },
-          orderBy: { createdAt: 'desc' },
-        },
-        _count: {
-          select: {
-            likes: true,
-            comments: true,
+          comments: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  nombre: true,
+                  avatar: true,
+                },
+              },
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 50, // Limitar comentarios para evitar queries pesadas
+          },
+          _count: {
+            select: {
+              likes: true,
+              comments: true,
+            },
           },
         },
-      },
-    });
+      }),
+      // Verificar like en paralelo solo si hay userId
+      userId
+        ? this.prisma.like.findUnique({
+            where: {
+              userId_storyId: { userId, storyId: id },
+            },
+            select: { id: true }, // Solo necesitamos saber si existe
+          })
+        : Promise.resolve(null),
+    ]);
 
     if (!story) {
       throw new NotFoundError('Historia no encontrada');
     }
 
-    // Increment views
-    await this.prisma.story.update({
-      where: { id },
-      data: { views: { increment: 1 } },
-    });
-
-    // Check if current user liked this story
-    let isLiked = false;
-    if (userId) {
-      const like = await this.prisma.like.findUnique({
-        where: {
-          userId_storyId: { userId, storyId: id },
-        },
+    // Increment views de forma asíncrona (fire and forget)
+    // No esperamos la respuesta para no bloquear
+    this.prisma.story
+      .update({
+        where: { id },
+        data: { views: { increment: 1 } },
+      })
+      .catch(() => {
+        // Ignorar errores en el contador de vistas
       });
-      isLiked = !!like;
-    }
 
-    return { ...story, isLiked };
+    return { ...story, isLiked: !!likeStatus };
   }
 
   async update(id: string, userId: string, data: UpdateStoryInput) {

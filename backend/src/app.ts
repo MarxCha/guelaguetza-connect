@@ -1,6 +1,8 @@
 import Fastify, { FastifyInstance, FastifyError } from 'fastify';
 import cors from '@fastify/cors';
+import multipart from '@fastify/multipart';
 import websocket from '@fastify/websocket';
+import rawBody from 'fastify-raw-body';
 import {
   serializerCompiler,
   validatorCompiler,
@@ -8,6 +10,9 @@ import {
 } from 'fastify-type-provider-zod';
 import prismaPlugin from './plugins/prisma.js';
 import authPlugin from './plugins/auth.js';
+import redisPlugin from './plugins/redis.js';
+import eventBusPlugin from './plugins/eventBus.js';
+import rateLimitPlugin from './plugins/rate-limit.js';
 import authRoutes from './routes/auth.js';
 import storiesRoutes from './routes/stories.js';
 import transportRoutes from './routes/transport.js';
@@ -25,8 +30,16 @@ import communitiesRoutes from './routes/communities.js';
 import bookingsRoutes from './routes/bookings.js';
 import poiRoutes from './routes/poi.js';
 import marketplaceRoutes from './routes/marketplace.js';
+import uploadRoutes from './routes/upload.js';
 import streamsRoutes from './routes/streams.js';
+import webhooksRoutes from './routes/webhooks.js';
+import metricsRoutes from './routes/metrics.js';
 import { ZodError } from 'zod';
+import {
+  httpRequestsTotal,
+  httpRequestDuration,
+  startTimerWithLabels,
+} from './utils/metrics.js';
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = Fastify({
@@ -51,12 +64,65 @@ export async function buildApp(): Promise<FastifyInstance> {
     credentials: true,
   });
 
+  // Register multipart support for file uploads
+  await app.register(multipart, {
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB
+      files: 5,
+    },
+  });
+
+  // Register raw body support for webhooks (must be before routes)
+  await app.register(rawBody, {
+    field: 'rawBody',
+    global: false, // Solo para rutas que lo soliciten
+    encoding: 'utf8',
+    runFirst: true,
+  });
+
   // Register WebSocket support
   await app.register(websocket);
 
   // Register plugins
   await app.register(prismaPlugin);
+  await app.register(redisPlugin);
+  await app.register(eventBusPlugin);
+  await app.register(rateLimitPlugin);
   await app.register(authPlugin);
+
+  // HTTP request metrics middleware
+  app.addHook('onRequest', async (request, reply) => {
+    // Store start time for duration tracking
+    (request as any).metricsStartTime = process.hrtime.bigint();
+  });
+
+  app.addHook('onResponse', async (request, reply) => {
+    const startTime = (request as any).metricsStartTime;
+    if (startTime) {
+      const endTime = process.hrtime.bigint();
+      const durationNs = Number(endTime - startTime);
+      const durationSeconds = durationNs / 1e9;
+
+      // Normalize route for metrics (replace IDs with :id)
+      const route = request.routeOptions?.url || request.url;
+      const normalizedRoute = route
+        .replace(/\/[a-f0-9-]{36}/gi, '/:id') // UUID
+        .replace(/\/[a-z0-9]{24,25}/gi, '/:id') // CUID
+        .replace(/\/\d+/g, '/:id'); // Numeric IDs
+
+      // Record metrics
+      httpRequestsTotal.inc({
+        method: request.method,
+        route: normalizedRoute,
+        status_code: String(reply.statusCode),
+      });
+
+      httpRequestDuration.observe(
+        { method: request.method, route: normalizedRoute },
+        durationSeconds
+      );
+    }
+  });
 
   // Register routes
   await app.register(authRoutes, { prefix: '/api/auth' });
@@ -76,7 +142,14 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(bookingsRoutes, { prefix: '/api/bookings' });
   await app.register(poiRoutes, { prefix: '/api/poi' });
   await app.register(marketplaceRoutes, { prefix: '/api/marketplace' });
+  await app.register(uploadRoutes, { prefix: '/api/upload' });
   await app.register(streamsRoutes, { prefix: '/api/streams' });
+
+  // Webhooks (must NOT use auth middleware)
+  await app.register(webhooksRoutes, { prefix: '/api/webhooks' });
+
+  // Metrics endpoint (no prefix, accessed as /metrics)
+  await app.register(metricsRoutes);
 
   // Health check
   app.get('/health', async () => {
@@ -106,7 +179,10 @@ export async function buildApp(): Promise<FastifyInstance> {
         bookings: '/api/bookings',
         poi: '/api/poi',
         marketplace: '/api/marketplace',
+        upload: '/api/upload',
         streams: '/api/streams',
+        webhooks: '/api/webhooks',
+        metrics: '/metrics',
       },
     };
   });

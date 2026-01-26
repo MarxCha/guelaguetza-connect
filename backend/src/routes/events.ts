@@ -12,7 +12,7 @@ import {
 
 const eventsRoutes: FastifyPluginAsync = async (fastify) => {
   const notificationService = new NotificationService(fastify.prisma);
-  const eventService = new EventService(fastify.prisma, notificationService);
+  const eventService = new EventService(fastify.prisma, notificationService, fastify.cache);
 
   // Get events with filters
   fastify.get<{ Querystring: EventsQuery }>(

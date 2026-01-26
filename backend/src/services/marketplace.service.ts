@@ -12,10 +12,36 @@ import {
   UpdateSellerProfileInput,
 } from '../schemas/marketplace.schema.js';
 import { stripeService } from './stripe.service.js';
-import { AppError, NotFoundError } from '../utils/errors.js';
+import { AppError, NotFoundError, ConcurrencyError } from '../utils/errors.js';
+import {
+  withRetry,
+  updateProductWithLocking,
+  getProductWithVersion
+} from '../utils/optimistic-locking.js';
+import {
+  ordersCreatedTotal,
+  ordersCancelledTotal,
+  orderCreationDuration,
+  concurrencyConflictsTotal,
+  startTimer,
+} from '../utils/metrics.js';
+import { CacheService } from './cache.service.js';
+import { EventBus, createEvent, EventTypes } from '../infrastructure/events/index.js';
 
 export class MarketplaceService {
-  constructor(private prisma: PrismaClient) {}
+  // Cache TTLs (in seconds)
+  private readonly CACHE_TTL = {
+    PRODUCT_DETAIL: 120, // 2 minutos - detalle de producto
+    PRODUCT_LIST: 600, // 10 minutos - listado de productos
+    SELLER_PROFILE: 300, // 5 minutos - perfil de vendedor
+    CART: 60, // 1 minuto - carrito cambia frecuentemente
+  };
+
+  constructor(
+    private prisma: PrismaClient,
+    private cache?: CacheService,
+    private eventBus?: EventBus
+  ) {}
 
   // ============================================
   // PRODUCTS
@@ -24,6 +50,15 @@ export class MarketplaceService {
   async getProducts(query: ProductQuery) {
     const { category, minPrice, maxPrice, status, sellerId, search, page, limit } = query;
     const skip = (page - 1) * limit;
+
+    // Cache key based on query params
+    const cacheKey = `products:list:cat:${category || 'all'}:status:${status || 'ACTIVE'}:seller:${sellerId || 'all'}:price:${minPrice || 0}-${maxPrice || 'inf'}:search:${search || 'none'}:page:${page}:limit:${limit}`;
+
+    // Try cache first
+    if (this.cache) {
+      const cached = await this.cache.get(cacheKey);
+      if (cached) return cached;
+    }
 
     const where: Prisma.ProductWhereInput = {
       status: status || 'ACTIVE',
@@ -61,7 +96,7 @@ export class MarketplaceService {
       this.prisma.product.count({ where }),
     ]);
 
-    return {
+    const result = {
       products,
       pagination: {
         page,
@@ -70,9 +105,23 @@ export class MarketplaceService {
         totalPages: Math.ceil(total / limit),
       },
     };
+
+    // Cache the result
+    if (this.cache) {
+      await this.cache.set(cacheKey, result, this.CACHE_TTL.PRODUCT_LIST);
+    }
+
+    return result;
   }
 
   async getProductById(id: string) {
+    // Try cache first
+    const cacheKey = `product:${id}:detail`;
+    if (this.cache) {
+      const cached = await this.cache.get(cacheKey);
+      if (cached) return cached;
+    }
+
     const product = await this.prisma.product.findUnique({
       where: { id },
       include: {
@@ -102,6 +151,11 @@ export class MarketplaceService {
       throw new NotFoundError('Producto no encontrado');
     }
 
+    // Cache the result
+    if (this.cache) {
+      await this.cache.set(cacheKey, product, this.CACHE_TTL.PRODUCT_DETAIL);
+    }
+
     return product;
   }
 
@@ -115,7 +169,7 @@ export class MarketplaceService {
       throw new AppError('Necesitas crear un perfil de vendedor primero', 400);
     }
 
-    return this.prisma.product.create({
+    const product = await this.prisma.product.create({
       data: {
         ...data,
         price: new Prisma.Decimal(data.price),
@@ -126,6 +180,13 @@ export class MarketplaceService {
         seller: true,
       },
     });
+
+    // Invalidate product listings cache
+    if (this.cache) {
+      await this.cache.invalidate('products:list:*');
+    }
+
+    return product;
   }
 
   async updateProduct(id: string, userId: string, data: UpdateProductInput) {
@@ -142,13 +203,23 @@ export class MarketplaceService {
       throw new AppError('No tienes permiso para editar este producto', 403);
     }
 
-    return this.prisma.product.update({
+    const updated = await this.prisma.product.update({
       where: { id },
       data: {
         ...data,
         ...(data.price && { price: new Prisma.Decimal(data.price) }),
       },
     });
+
+    // Invalidate cache
+    if (this.cache) {
+      await Promise.all([
+        this.cache.del(`product:${id}:detail`),
+        this.cache.invalidate('products:list:*'),
+      ]);
+    }
+
+    return updated;
   }
 
   async deleteProduct(id: string, userId: string) {
@@ -169,6 +240,14 @@ export class MarketplaceService {
       where: { id },
       data: { status: 'ARCHIVED' },
     });
+
+    // Invalidate cache
+    if (this.cache) {
+      await Promise.all([
+        this.cache.del(`product:${id}:detail`),
+        this.cache.invalidate('products:list:*'),
+      ]);
+    }
 
     return { message: 'Producto eliminado' };
   }
@@ -366,9 +445,13 @@ export class MarketplaceService {
   // ============================================
 
   async createOrder(userId: string, data: CreateOrderInput) {
+    // Start timing for metrics
+    const endTimer = startTimer(orderCreationDuration);
+
     const cart = await this.getCart(userId);
 
     if (cart.items.length === 0) {
+      endTimer();
       throw new AppError('El carrito está vacío', 400);
     }
 
@@ -382,79 +465,207 @@ export class MarketplaceService {
       itemsBySeller.get(sellerId)!.push(item);
     }
 
-    // Create orders for each seller
-    const orders = await this.prisma.$transaction(async (tx) => {
-      const createdOrders = [];
+    // FASE 1: Crear órdenes y reservar inventario en BD con optimistic locking
+    // =========================================================================
+    const pendingOrders = await withRetry(
+      async () => {
+        return this.prisma.$transaction(async (tx) => {
+          const createdOrders = [];
 
-      for (const [sellerId, items] of itemsBySeller) {
-        const total = items.reduce(
-          (sum, item) => sum + Number(item.product.price) * item.quantity,
-          0
-        );
+          for (const [sellerId, items] of itemsBySeller) {
+            // Validate stock availability and get current versions
+            for (const item of items) {
+              const product = await tx.product.findUnique({
+                where: { id: item.productId },
+              });
 
-        // Create payment intent
-        const payment = await stripeService.createPaymentIntent({
-          amount: Math.round(total * 100),
-          description: `Orden de compra - Guelaguetza Connect`,
-          metadata: { userId, sellerId },
-        });
+              if (!product) {
+                throw new NotFoundError(`Producto ${item.productId} no encontrado`);
+              }
 
-        // Create order
-        const order = await tx.order.create({
-          data: {
-            userId,
-            sellerId,
-            total: new Prisma.Decimal(total),
-            shippingAddress: data.shippingAddress as object,
-            stripePaymentId: payment?.paymentIntentId,
-            items: {
-              create: items.map((item) => ({
-                productId: item.productId,
-                quantity: item.quantity,
-                price: item.product.price,
-              })),
-            },
-          },
-          include: {
-            items: {
-              include: { product: true },
-            },
-            seller: {
-              include: {
-                user: {
-                  select: { id: true, nombre: true },
+              if (product.stock < item.quantity) {
+                throw new AppError(
+                  `Stock insuficiente para ${product.name}. Disponible: ${product.stock}`,
+                  400
+                );
+              }
+            }
+
+            const total = items.reduce(
+              (sum, item) => sum + Number(item.product.price) * item.quantity,
+              0
+            );
+
+            // Create order in PENDING_PAYMENT status
+            const order = await tx.order.create({
+              data: {
+                userId,
+                sellerId,
+                total: new Prisma.Decimal(total),
+                shippingAddress: data.shippingAddress as object,
+                status: 'PENDING_PAYMENT',
+                items: {
+                  create: items.map((item) => ({
+                    productId: item.productId,
+                    quantity: item.quantity,
+                    price: item.product.price,
+                  })),
                 },
               },
+              include: {
+                items: {
+                  include: { product: true },
+                },
+                seller: {
+                  include: {
+                    user: {
+                      select: { id: true, nombre: true },
+                    },
+                  },
+                },
+              },
+            });
+
+            // Reserve stock using optimistic locking
+            for (const item of items) {
+              const product = await tx.product.findUnique({
+                where: { id: item.productId },
+                select: { version: true },
+              });
+
+              if (!product) {
+                throw new NotFoundError(`Producto ${item.productId} no encontrado`);
+              }
+
+              // Update with optimistic locking
+              await updateProductWithLocking(
+                tx,
+                item.productId,
+                product.version,
+                {
+                  stock: { decrement: item.quantity },
+                }
+              );
+            }
+
+            createdOrders.push(order);
+          }
+
+          // Clear cart
+          const userCart = await tx.cart.findUnique({ where: { userId } });
+          if (userCart) {
+            await tx.cartItem.deleteMany({ where: { cartId: userCart.id } });
+          }
+
+          return createdOrders;
+        });
+      },
+      { maxRetries: 3, retryDelay: 100 }
+    );
+
+    // FASE 2: Crear payment intents en Stripe (FUERA de la transacción)
+    // ==================================================================
+    const ordersWithPayment = [];
+
+    for (const order of pendingOrders) {
+      try {
+        const payment = await stripeService.createPaymentIntent({
+          amount: Math.round(Number(order.total) * 100),
+          description: `Orden #${order.id} - Guelaguetza Connect`,
+          metadata: {
+            orderId: order.id,
+            userId,
+            sellerId: order.sellerId,
+          },
+        });
+
+        // FASE 3: Actualizar orden con payment intent ID
+        // ===============================================
+        if (payment?.paymentIntentId) {
+          await this.prisma.order.update({
+            where: { id: order.id },
+            data: {
+              stripePaymentId: payment.paymentIntentId,
+              status: 'PENDING', // Ready for payment
+            },
+          });
+
+          ordersWithPayment.push({
+            order,
+            clientSecret: payment.clientSecret,
+          });
+        }
+      } catch (stripeError) {
+        // Si Stripe falla, marcar orden como PAYMENT_FAILED
+        // El stock ya está reservado - se puede reintentar el pago
+        await this.prisma.order.update({
+          where: { id: order.id },
+          data: { status: 'PAYMENT_FAILED' },
+        });
+
+        // Continuar con las demás órdenes
+        ordersWithPayment.push({
+          order,
+          error: stripeError instanceof Error ? stripeError.message : 'Error al procesar pago',
+        });
+      }
+    }
+
+    // Si todas las órdenes fallaron, lanzar error
+    const allFailed = ordersWithPayment.every((o) => 'error' in o);
+    if (allFailed) {
+      ordersCreatedTotal.inc({ status: 'failed' });
+      endTimer();
+      throw new AppError(
+        'Error al procesar los pagos. Por favor intenta nuevamente.',
+        500
+      );
+    }
+
+    // Emit order.created events (fire-and-forget)
+    if (this.eventBus) {
+      for (const { order } of ordersWithPayment) {
+        const user = await this.prisma.user.findUnique({
+          where: { id: userId },
+          select: { nombre: true, apellido: true },
+        });
+
+        const seller = await this.prisma.sellerProfile.findUnique({
+          where: { id: order.sellerId },
+          include: {
+            user: {
+              select: { nombre: true, apellido: true },
             },
           },
         });
 
-        // Update product stock
-        for (const item of items) {
-          await tx.product.update({
-            where: { id: item.productId },
-            data: {
-              stock: { decrement: item.quantity },
-            },
-          });
-        }
-
-        createdOrders.push({
-          order,
-          clientSecret: payment?.clientSecret,
-        });
+        this.eventBus.emitAsync(
+          createEvent(EventTypes.ORDER_CREATED, {
+            orderId: order.id,
+            userId,
+            userName: user ? `${user.nombre} ${user.apellido || ''}`.trim() : 'Usuario',
+            sellerId: order.sellerId,
+            sellerName: seller
+              ? `${seller.user.nombre} ${seller.user.apellido || ''}`.trim()
+              : 'Vendedor',
+            total: Number(order.total),
+            itemCount: order.items.length,
+            items: order.items.map((item) => ({
+              productId: item.productId,
+              productName: item.product.name,
+              quantity: item.quantity,
+              price: Number(item.price),
+            })),
+          })
+        );
       }
+    }
 
-      // Clear cart
-      const userCart = await tx.cart.findUnique({ where: { userId } });
-      if (userCart) {
-        await tx.cartItem.deleteMany({ where: { cartId: userCart.id } });
-      }
+    // Record success metrics
+    ordersCreatedTotal.inc({ status: 'pending' });
+    endTimer();
 
-      return createdOrders;
-    });
-
-    return orders;
+    return ordersWithPayment;
   }
 
   async getMyOrders(userId: string, query: OrderQuery) {
@@ -534,7 +745,18 @@ export class MarketplaceService {
   async updateOrderStatus(id: string, userId: string, status: OrderStatus) {
     const order = await this.prisma.order.findUnique({
       where: { id },
-      include: { seller: true },
+      include: {
+        seller: {
+          include: {
+            user: {
+              select: { nombre: true, apellido: true },
+            },
+          },
+        },
+        items: {
+          include: { product: true },
+        },
+      },
     });
 
     if (!order) {
@@ -546,7 +768,7 @@ export class MarketplaceService {
       throw new AppError('No tienes permiso para actualizar esta orden', 403);
     }
 
-    return this.prisma.order.update({
+    const updated = await this.prisma.order.update({
       where: { id },
       data: { status },
       include: {
@@ -555,6 +777,144 @@ export class MarketplaceService {
         },
       },
     });
+
+    // Emit events based on status change
+    if (this.eventBus) {
+      const sellerName = `${order.seller.user.nombre} ${order.seller.user.apellido || ''}`.trim();
+
+      if (status === 'SHIPPED') {
+        this.eventBus.emitAsync(
+          createEvent(EventTypes.ORDER_SHIPPED, {
+            orderId: id,
+            userId: order.userId,
+            sellerId: order.sellerId,
+            trackingNumber: undefined, // TODO: Add tracking number to order model
+          })
+        );
+      } else if (status === 'DELIVERED') {
+        this.eventBus.emitAsync(
+          createEvent(EventTypes.ORDER_DELIVERED, {
+            orderId: id,
+            userId: order.userId,
+            sellerId: order.sellerId,
+            total: Number(order.total),
+            deliveredAt: new Date(),
+          })
+        );
+      }
+    }
+
+    return updated;
+  }
+
+  // ============================================
+  // CLEANUP & MAINTENANCE
+  // ============================================
+
+  /**
+   * Limpia órdenes en estado PENDING_PAYMENT o PAYMENT_FAILED
+   * que han superado el timeout (por defecto 30 minutos).
+   * Restaura el stock de productos.
+   */
+  async cleanupFailedOrders(timeoutMinutes: number = 30) {
+    const cutoffTime = new Date(Date.now() - timeoutMinutes * 60 * 1000);
+
+    const failedOrders = await this.prisma.order.findMany({
+      where: {
+        status: {
+          in: ['PENDING_PAYMENT', 'PAYMENT_FAILED'],
+        },
+        createdAt: {
+          lt: cutoffTime,
+        },
+      },
+      include: {
+        items: {
+          include: {
+            product: {
+              select: { id: true, name: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (failedOrders.length === 0) {
+      return {
+        cleaned: 0,
+        details: [],
+      };
+    }
+
+    // Agrupar items por producto para optimizar las actualizaciones
+    const productRestores = new Map<string, number>();
+    const details: Array<{
+      orderId: string;
+      itemCount: number;
+      totalAmount: number;
+      status: string;
+      createdAt: Date;
+    }> = [];
+
+    for (const order of failedOrders) {
+      for (const item of order.items) {
+        const current = productRestores.get(item.productId) || 0;
+        productRestores.set(item.productId, current + item.quantity);
+      }
+
+      details.push({
+        orderId: order.id,
+        itemCount: order.items.length,
+        totalAmount: Number(order.total),
+        status: order.status,
+        createdAt: order.createdAt,
+      });
+    }
+
+    // Ejecutar limpieza en transacción con optimistic locking
+    await withRetry(
+      async () => {
+        return this.prisma.$transaction(async (tx) => {
+          // Restaurar stock de productos usando optimistic locking
+          for (const [productId, quantity] of productRestores) {
+            const product = await tx.product.findUnique({
+              where: { id: productId },
+              select: { version: true },
+            });
+
+            if (product) {
+              await updateProductWithLocking(
+                tx,
+                productId,
+                product.version,
+                {
+                  stock: { increment: quantity },
+                }
+              );
+            }
+          }
+
+          // Marcar órdenes como canceladas
+          await tx.order.updateMany({
+            where: {
+              id: {
+                in: failedOrders.map((o) => o.id),
+              },
+            },
+            data: {
+              status: 'CANCELLED',
+            },
+          });
+        });
+      },
+      { maxRetries: 3, retryDelay: 100 }
+    );
+
+    return {
+      cleaned: failedOrders.length,
+      details,
+      productsUpdated: productRestores.size,
+    };
   }
 
   // ============================================

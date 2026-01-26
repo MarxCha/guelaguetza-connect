@@ -1,0 +1,243 @@
+# ============================================
+# CODE QUALITY CHECKS
+# ============================================
+# Ejecuta en: Pull Requests
+# Verifica: Duplicación de código, complejidad, vulnerabilidades
+# ============================================
+
+name: Code Quality
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ============================================
+  # ANALYZE CODE QUALITY
+  # ============================================
+  analyze:
+    name: Analyze Code Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # ============================================
+      # DEPENDENCY AUDIT
+      # ============================================
+      - name: Audit Frontend dependencies
+        run: npm audit --audit-level=moderate || true
+        continue-on-error: true
+
+      - name: Audit Backend dependencies
+        run: cd backend && npm audit --audit-level=moderate || true
+        continue-on-error: true
+
+      # ============================================
+      # CHECK FOR OUTDATED DEPENDENCIES
+      # ============================================
+      - name: Check outdated Frontend packages
+        run: npm outdated || true
+        continue-on-error: true
+
+      - name: Check outdated Backend packages
+        run: cd backend && npm outdated || true
+        continue-on-error: true
+
+      # ============================================
+      # TYPESCRIPT STRICT MODE
+      # ============================================
+      - name: Install dependencies
+        run: npm ci && cd backend && npm ci
+
+      - name: TypeScript strict check
+        run: |
+          echo "Checking TypeScript strict mode compliance..."
+          npx tsc --noEmit --strict || true
+        continue-on-error: true
+
+      # ============================================
+      # CODE COMPLEXITY (experimental)
+      # ============================================
+      - name: Analyze code complexity
+        run: |
+          echo "Code complexity analysis..."
+          echo "TODO: Implement with complexity tool like eslint-plugin-complexity"
+        continue-on-error: true
+
+  # ============================================
+  # SECURITY SCAN
+  # ============================================
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # ============================================
+  # BUNDLE SIZE CHECK
+  # ============================================
+  bundle-size:
+    name: Check Bundle Size
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Frontend
+        run: npm run build
+        env:
+          VITE_API_URL: https://api.example.com
+
+      - name: Check bundle size
+        run: |
+          echo "Checking bundle size..."
+          du -sh dist/
+          du -sh dist/assets/*.js
+          
+          # Warning if bundle is too large (> 1MB for main bundle)
+          MAIN_BUNDLE_SIZE=$(du -k dist/assets/index*.js | cut -f1)
+          if [ $MAIN_BUNDLE_SIZE -gt 1024 ]; then
+            echo "::warning::Main bundle is larger than 1MB ($MAIN_BUNDLE_SIZE KB)"
+          fi
+
+      - name: Comment bundle size on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const { execSync } = require('child_process');
+            
+            const distSize = execSync('du -sh dist/').toString().split('\t')[0];
+            const jsFiles = execSync('find dist/assets -name "*.js" -exec du -h {} \;').toString();
+            
+            const comment = `## Bundle Size Report
+            
+            **Total dist size:** ${distSize}
+            
+            **JavaScript bundles:**
+            \`\`\`
+            ${jsFiles}
+            \`\`\`
+            
+            > Make sure the main bundle stays under 1MB for optimal performance.
+            `;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  # ============================================
+  # COMMIT MESSAGE CHECK
+  # ============================================
+  commit-lint:
+    name: Lint Commit Messages
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check commit messages
+        run: |
+          echo "Checking commit messages follow Conventional Commits..."
+          
+          # Get commits in PR
+          git log --format=%s origin/main..HEAD | while read msg; do
+            if ! echo "$msg" | grep -qE '^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .+'; then
+              echo "::warning::Commit message doesn't follow Conventional Commits: $msg"
+            fi
+          done
+
+  # ============================================
+  # TODO COMMENTS CHECK
+  # ============================================
+  todo-check:
+    name: Check TODO Comments
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Find TODO comments
+        run: |
+          echo "Searching for TODO comments..."
+          
+          TODO_COUNT=$(grep -r "TODO" --include="*.ts" --include="*.tsx" --exclude-dir=node_modules --exclude-dir=dist . | wc -l || echo "0")
+          FIXME_COUNT=$(grep -r "FIXME" --include="*.ts" --include="*.tsx" --exclude-dir=node_modules --exclude-dir=dist . | wc -l || echo "0")
+          
+          echo "Found $TODO_COUNT TODOs and $FIXME_COUNT FIXMEs"
+          
+          if [ $FIXME_COUNT -gt 0 ]; then
+            echo "::warning::Found $FIXME_COUNT FIXME comments that should be addressed"
+            grep -rn "FIXME" --include="*.ts" --include="*.tsx" --exclude-dir=node_modules --exclude-dir=dist . || true
+          fi
+
+  # ============================================
+  # STATUS SUMMARY
+  # ============================================
+  quality-status:
+    name: Code Quality Status
+    runs-on: ubuntu-latest
+    needs: [analyze, security, bundle-size, commit-lint, todo-check]
+    if: always()
+
+    steps:
+      - name: Check overall status
+        run: |
+          echo "Code Quality Checks Complete"
+          echo "Analyze: ${{ needs.analyze.result }}"
+          echo "Security: ${{ needs.security.result }}"
+          echo "Bundle Size: ${{ needs.bundle-size.result }}"
+          echo "Commit Lint: ${{ needs.commit-lint.result }}"
+          echo "TODO Check: ${{ needs.todo-check.result }}"

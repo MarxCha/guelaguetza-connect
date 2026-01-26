@@ -69,9 +69,17 @@ const Card: React.FC<CardProps> = ({
   return (
     <div
       className={`${variants[variant]} ${paddings[padding]} ${roundeds[rounded]} ${
-        hoverable ? 'transition-all hover:shadow-lg hover:-translate-y-1' : ''
-      } ${onClick ? 'cursor-pointer' : ''} ${className}`}
+        hoverable ? 'transition-all duration-200 hover:shadow-lg hover:-translate-y-1' : ''
+      } ${onClick ? 'cursor-pointer focus-visible:ring-2 focus-visible:ring-oaxaca-pink focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900' : ''} ${className}`}
       onClick={handleClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleClick();
+        }
+      } : undefined}
     >
       {children}
     </div>

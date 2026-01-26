@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="light">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
@@ -20,10 +20,24 @@
     <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192.png" />
 
+    <!-- Prevent FOUC (Flash of Unstyled Content) for theme -->
+    <script>
+      (function() {
+        try {
+          const stored = localStorage.getItem('guelaguetza_theme');
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const theme = stored === 'dark' || (stored === 'system' && prefersDark) || (!stored && prefersDark) ? 'dark' : 'light';
+          document.documentElement.classList.remove('light', 'dark');
+          document.documentElement.classList.add(theme);
+          document.documentElement.style.colorScheme = theme;
+        } catch (e) {}
+      })();
+    </script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
-        darkMode: 'media',
+        darkMode: 'class',
         theme: {
           extend: {
             // Design Tokens - Colores
@@ -87,13 +101,99 @@
               'modal': '100',
               'toast': '150',
               'tooltip': '200',
-            }
+            },
+            // Animations
+            animation: {
+              'fade-in': 'fadeIn 0.3s ease-out',
+              'fade-out': 'fadeOut 0.3s ease-out',
+              'slide-up': 'slideUp 0.3s ease-out',
+              'slide-down': 'slideDown 0.3s ease-out',
+              'scale-in': 'scaleIn 0.2s ease-out',
+              'spin-slow': 'spin 3s linear infinite',
+              'pulse-soft': 'pulseSoft 2s ease-in-out infinite',
+              'bounce-soft': 'bounceSoft 1s ease-in-out infinite',
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: '0' },
+                '100%': { opacity: '1' },
+              },
+              fadeOut: {
+                '0%': { opacity: '1' },
+                '100%': { opacity: '0' },
+              },
+              slideUp: {
+                '0%': { transform: 'translateY(10px)', opacity: '0' },
+                '100%': { transform: 'translateY(0)', opacity: '1' },
+              },
+              slideDown: {
+                '0%': { transform: 'translateY(-10px)', opacity: '0' },
+                '100%': { transform: 'translateY(0)', opacity: '1' },
+              },
+              scaleIn: {
+                '0%': { transform: 'scale(0.95)', opacity: '0' },
+                '100%': { transform: 'scale(1)', opacity: '1' },
+              },
+              pulseSoft: {
+                '0%, 100%': { opacity: '1' },
+                '50%': { opacity: '0.7' },
+              },
+              bounceSoft: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-5px)' },
+              },
+            },
           }
         }
       }
     </script>
     <style>
-      /* Hide scrollbar for stories */
+      /* ============================================
+         Global Styles - Guelaguetza Connect
+         ============================================ */
+
+      /* CSS Variables for Theme */
+      :root {
+        --color-bg-primary: #F5F5F4;
+        --color-bg-secondary: #FFFFFF;
+        --color-text-primary: #1C1917;
+        --color-text-secondary: #595959;
+        --color-text-muted: #767676;
+        --color-border: #E5E7EB;
+        --color-shadow: rgba(0, 0, 0, 0.08);
+        --transition-fast: 150ms;
+        --transition-normal: 200ms;
+        --transition-slow: 300ms;
+      }
+
+      .dark {
+        --color-bg-primary: #030712;
+        --color-bg-secondary: #111827;
+        --color-text-primary: #F9FAFB;
+        --color-text-secondary: #D1D5DB;
+        --color-text-muted: #9CA3AF;
+        --color-border: #374151;
+        --color-shadow: rgba(0, 0, 0, 0.3);
+      }
+
+      /* Base HTML/Body Styles */
+      html {
+        scroll-behavior: smooth;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      html.dark {
+        color-scheme: dark;
+      }
+
+      body {
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+      }
+
+      /* Scrollbar Styles */
       .no-scrollbar::-webkit-scrollbar {
         display: none;
       }
@@ -102,10 +202,39 @@
         scrollbar-width: none;
       }
 
-      /* Animations */
+      /* Custom Scrollbar for Light/Dark Mode */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #D1D5DB;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #9CA3AF;
+      }
+      .dark ::-webkit-scrollbar-thumb {
+        background: #4B5563;
+      }
+      .dark ::-webkit-scrollbar-thumb:hover {
+        background: #6B7280;
+      }
+
+      /* ============================================
+         Animations
+         ============================================ */
+
       @keyframes fade-in {
         from { opacity: 0; }
         to { opacity: 1; }
+      }
+      @keyframes fade-out {
+        from { opacity: 1; }
+        to { opacity: 0; }
       }
       @keyframes slide-in-from-bottom {
         from { transform: translateY(100%); opacity: 0; }
@@ -115,8 +244,53 @@
         from { transform: translateY(40px); opacity: 0; }
         to { transform: translateY(0); opacity: 1; }
       }
+      @keyframes slide-in-from-top {
+        from { transform: translateY(-10px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+      @keyframes slide-in-from-left {
+        from { transform: translateX(-100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+      @keyframes slide-in-from-right {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+      @keyframes fade-slide-in {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes scale-in {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+      }
+      @keyframes zoom-in-95 {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+      }
+      @keyframes slide-up {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+      }
+      @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+      }
+      @keyframes pulse-ring {
+        0% { transform: scale(1); opacity: 1; }
+        100% { transform: scale(1.5); opacity: 0; }
+      }
+      @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+      }
+
+      /* Animation Classes */
       .animate-fade-in {
         animation: fade-in 0.3s ease-out;
+      }
+      .animate-fade-out {
+        animation: fade-out 0.3s ease-out;
       }
       .animate-in {
         animation-duration: 0.3s;
@@ -128,61 +302,26 @@
       .slide-in-from-bottom-10 {
         animation-name: slide-in-from-bottom-10;
       }
+      .slide-in-from-bottom-4 {
+        animation-name: slide-in-from-bottom-10;
+      }
+      .slide-in-from-top-2 {
+        animation-name: slide-in-from-top;
+      }
+      .slide-in-from-left {
+        animation-name: slide-in-from-left;
+      }
+      .slide-in-from-right {
+        animation-name: slide-in-from-right;
+      }
+      .zoom-in-95 {
+        animation-name: zoom-in-95;
+      }
+      .duration-200 {
+        animation-duration: 0.2s;
+      }
       .duration-300 {
         animation-duration: 0.3s;
-      }
-
-      /* Line clamp for text */
-      .line-clamp-2 {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-      }
-
-      /* Accessibility - Improved contrast for outdoor/sunlight viewing */
-      @media (prefers-contrast: more) {
-        .text-gray-400, .text-gray-300 {
-          color: #4b5563 !important; /* gray-600 */
-        }
-        .text-gray-500 {
-          color: #374151 !important; /* gray-700 */
-        }
-        .dark .text-gray-400, .dark .text-gray-300 {
-          color: #d1d5db !important; /* gray-300 */
-        }
-      }
-
-      /* Accessible text utility classes */
-      .text-accessible {
-        color: #595959;
-      }
-      .dark .text-accessible {
-        color: #a3a3a3;
-      }
-      .text-accessible-muted {
-        color: #767676;
-      }
-      .dark .text-accessible-muted {
-        color: #9ca3af;
-      }
-
-      /* Enhanced animations */
-      @keyframes fade-slide-in {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-      @keyframes scale-in {
-        from { opacity: 0; transform: scale(0.95); }
-        to { opacity: 1; transform: scale(1); }
-      }
-      @keyframes slide-up {
-        from { transform: translateY(100%); }
-        to { transform: translateY(0); }
-      }
-      @keyframes shimmer {
-        0% { background-position: -200% 0; }
-        100% { background-position: 200% 0; }
       }
       .animate-fade-slide-in {
         animation: fade-slide-in 0.3s ease-out;
@@ -198,6 +337,12 @@
         background-size: 200% 100%;
         animation: shimmer 1.5s infinite;
       }
+      .animate-pulse-ring {
+        animation: pulse-ring 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+      .animate-float {
+        animation: float 3s ease-in-out infinite;
+      }
 
       /* Stagger animation for lists */
       .stagger-item {
@@ -212,10 +357,524 @@
       .stagger-item:nth-child(6) { animation-delay: 250ms; }
       .stagger-item:nth-child(7) { animation-delay: 300ms; }
       .stagger-item:nth-child(8) { animation-delay: 350ms; }
+
+      /* ============================================
+         Line Clamp Utilities
+         ============================================ */
+
+      .line-clamp-1 {
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .line-clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      /* ============================================
+         Accessibility - WCAG AA Compliance
+         ============================================ */
+
+      /* Focus Visible Styles - Enhanced for accessibility */
+      *:focus-visible {
+        outline: 2px solid #D9006C;
+        outline-offset: 2px;
+        border-radius: 4px;
+      }
+
+      .dark *:focus-visible {
+        outline-color: #F472B6;
+      }
+
+      /* Enhanced focus for buttons and interactive elements */
+      button:focus-visible,
+      a:focus-visible,
+      [role="button"]:focus-visible,
+      input:focus-visible,
+      textarea:focus-visible,
+      select:focus-visible {
+        outline: 2px solid #D9006C;
+        outline-offset: 2px;
+        box-shadow: 0 0 0 4px rgba(217, 0, 108, 0.15);
+      }
+
+      .dark button:focus-visible,
+      .dark a:focus-visible,
+      .dark [role="button"]:focus-visible,
+      .dark input:focus-visible,
+      .dark textarea:focus-visible,
+      .dark select:focus-visible {
+        outline-color: #F472B6;
+        box-shadow: 0 0 0 4px rgba(244, 114, 182, 0.2);
+      }
+
+      /* Minimum touch target size - 44x44px for WCAG AA */
+      .touch-target {
+        min-width: 44px;
+        min-height: 44px;
+      }
+
+      @media (pointer: coarse) {
+        button,
+        a,
+        [role="button"],
+        input[type="checkbox"],
+        input[type="radio"] {
+          min-height: 44px;
+        }
+
+        /* Larger tap areas on touch devices */
+        .tap-target-sm {
+          min-width: 36px;
+          min-height: 36px;
+        }
+
+        .tap-target-md {
+          min-width: 44px;
+          min-height: 44px;
+        }
+
+        .tap-target-lg {
+          min-width: 48px;
+          min-height: 48px;
+        }
+      }
+
+      /* Skip Link */
+      .skip-link {
+        position: absolute;
+        top: -40px;
+        left: 0;
+        background: #D9006C;
+        color: white;
+        padding: 8px 16px;
+        z-index: 1000;
+        transition: top 0.3s;
+      }
+      .skip-link:focus {
+        top: 0;
+      }
+
+      /* High Contrast Mode */
+      @media (prefers-contrast: more) {
+        .text-gray-400, .text-gray-300 {
+          color: #4b5563 !important;
+        }
+        .text-gray-500 {
+          color: #374151 !important;
+        }
+        .dark .text-gray-400, .dark .text-gray-300 {
+          color: #d1d5db !important;
+        }
+        .border-gray-200 {
+          border-color: #9ca3af !important;
+        }
+        .dark .border-gray-700 {
+          border-color: #6b7280 !important;
+        }
+        /* Increase button contrast */
+        button, [role="button"] {
+          border-width: 2px !important;
+        }
+      }
+
+      /* ============================================
+         Responsive Breakpoints - Mobile First
+         ============================================ */
+
+      /* Extra small devices (320px and up) */
+      @media (min-width: 320px) {
+        .container-responsive {
+          padding-left: 1rem;
+          padding-right: 1rem;
+        }
+      }
+
+      /* Small devices (480px and up) */
+      @media (min-width: 480px) {
+        .container-responsive {
+          padding-left: 1.25rem;
+          padding-right: 1.25rem;
+        }
+      }
+
+      /* Medium devices (768px and up) */
+      @media (min-width: 768px) {
+        .container-responsive {
+          padding-left: 1.5rem;
+          padding-right: 1.5rem;
+          max-width: 768px;
+          margin-left: auto;
+          margin-right: auto;
+        }
+      }
+
+      /* Large devices (1024px and up) */
+      @media (min-width: 1024px) {
+        .container-responsive {
+          padding-left: 2rem;
+          padding-right: 2rem;
+          max-width: 1024px;
+        }
+      }
+
+      /* Extra large devices (1280px and up) */
+      @media (min-width: 1280px) {
+        .container-responsive {
+          max-width: 1280px;
+        }
+      }
+
+      /* 2XL devices (1536px and up) */
+      @media (min-width: 1536px) {
+        .container-responsive {
+          max-width: 1536px;
+        }
+      }
+
+      /* Full HD and beyond (1920px and up) */
+      @media (min-width: 1920px) {
+        .container-responsive {
+          max-width: 1680px;
+        }
+      }
+
+      /* Responsive grid utilities */
+      .grid-responsive {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: 1fr;
+      }
+
+      @media (min-width: 480px) {
+        .grid-responsive {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      @media (min-width: 768px) {
+        .grid-responsive {
+          gap: 1.25rem;
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      @media (min-width: 1024px) {
+        .grid-responsive {
+          gap: 1.5rem;
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+
+      @media (min-width: 1280px) {
+        .grid-responsive {
+          grid-template-columns: repeat(4, 1fr);
+        }
+      }
+
+      /* Responsive text sizes */
+      .text-responsive-xs {
+        font-size: 0.75rem;
+        line-height: 1rem;
+      }
+
+      .text-responsive-sm {
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+      }
+
+      .text-responsive-base {
+        font-size: 1rem;
+        line-height: 1.5rem;
+      }
+
+      .text-responsive-lg {
+        font-size: 1.125rem;
+        line-height: 1.75rem;
+      }
+
+      .text-responsive-xl {
+        font-size: 1.25rem;
+        line-height: 1.75rem;
+      }
+
+      @media (min-width: 768px) {
+        .text-responsive-xs {
+          font-size: 0.875rem;
+          line-height: 1.25rem;
+        }
+
+        .text-responsive-sm {
+          font-size: 1rem;
+          line-height: 1.5rem;
+        }
+
+        .text-responsive-base {
+          font-size: 1.125rem;
+          line-height: 1.75rem;
+        }
+
+        .text-responsive-lg {
+          font-size: 1.25rem;
+          line-height: 1.75rem;
+        }
+
+        .text-responsive-xl {
+          font-size: 1.5rem;
+          line-height: 2rem;
+        }
+      }
+
+      @media (min-width: 1024px) {
+        .text-responsive-xl {
+          font-size: 1.875rem;
+          line-height: 2.25rem;
+        }
+      }
+
+      /* Reduced Motion */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+          scroll-behavior: auto !important;
+        }
+        .animate-in,
+        .animate-fade-in,
+        .animate-slide-up,
+        .animate-scale-in,
+        .animate-shimmer,
+        .animate-pulse-ring,
+        .animate-float,
+        .stagger-item {
+          animation: none !important;
+          opacity: 1 !important;
+        }
+      }
+
+      /* Accessible text utility classes */
+      .text-accessible {
+        color: var(--color-text-secondary);
+      }
+      .text-accessible-muted {
+        color: var(--color-text-muted);
+      }
+
+      /* ============================================
+         Safe Area (iOS)
+         ============================================ */
+
+      .pb-safe {
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+      .pt-safe {
+        padding-top: env(safe-area-inset-top);
+      }
+      .pl-safe {
+        padding-left: env(safe-area-inset-left);
+      }
+      .pr-safe {
+        padding-right: env(safe-area-inset-right);
+      }
+
+      /* ============================================
+         Theme Transition
+         ============================================ */
+
+      html.transitioning,
+      html.transitioning *,
+      html.transitioning *::before,
+      html.transitioning *::after {
+        transition: background-color 0.3s ease,
+                    border-color 0.3s ease,
+                    color 0.3s ease !important;
+      }
+
+      /* ============================================
+         Form Styles
+         ============================================ */
+
+      /* Autofill Styles */
+      input:-webkit-autofill,
+      input:-webkit-autofill:hover,
+      input:-webkit-autofill:focus,
+      textarea:-webkit-autofill,
+      textarea:-webkit-autofill:hover,
+      textarea:-webkit-autofill:focus,
+      select:-webkit-autofill,
+      select:-webkit-autofill:hover,
+      select:-webkit-autofill:focus {
+        -webkit-text-fill-color: inherit;
+        -webkit-box-shadow: 0 0 0px 1000px var(--color-bg-secondary) inset;
+        transition: background-color 5000s ease-in-out 0s;
+      }
+
+      /* ============================================
+         Glass Morphism
+         ============================================ */
+
+      .glass {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+      .dark .glass {
+        background: rgba(17, 24, 39, 0.7);
+      }
+      .glass-strong {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+      }
+      .dark .glass-strong {
+        background: rgba(17, 24, 39, 0.85);
+      }
+
+      /* ============================================
+         Gradient Text
+         ============================================ */
+
+      .gradient-text {
+        background: linear-gradient(135deg, #D9006C 0%, #6A0F49 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .gradient-text-gold {
+        background: linear-gradient(135deg, #FFD100 0%, #8B4513 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      /* ============================================
+         Consistent Spacing Scale
+         Based on: 4, 8, 12, 16, 24, 32, 48, 64, 96
+         ============================================ */
+
+      .space-xs { margin: 0.25rem; }    /* 4px */
+      .space-sm { margin: 0.5rem; }     /* 8px */
+      .space-md { margin: 1rem; }       /* 16px */
+      .space-lg { margin: 1.5rem; }     /* 24px */
+      .space-xl { margin: 2rem; }       /* 32px */
+      .space-2xl { margin: 3rem; }      /* 48px */
+
+      .gap-xs { gap: 0.25rem; }         /* 4px */
+      .gap-sm { gap: 0.5rem; }          /* 8px */
+      .gap-md { gap: 1rem; }            /* 16px */
+      .gap-lg { gap: 1.5rem; }          /* 24px */
+      .gap-xl { gap: 2rem; }            /* 32px */
+      .gap-2xl { gap: 3rem; }           /* 48px */
+
+      /* ============================================
+         Interactive States - Consistent Hover/Focus
+         ============================================ */
+
+      .interactive {
+        transition: all 200ms ease-out;
+      }
+
+      .interactive:hover {
+        transform: translateY(-1px);
+      }
+
+      .interactive:active {
+        transform: translateY(0) scale(0.98);
+      }
+
+      .interactive-scale {
+        transition: transform 150ms ease-out;
+      }
+
+      .interactive-scale:hover {
+        transform: scale(1.02);
+      }
+
+      .interactive-scale:active {
+        transform: scale(0.98);
+      }
+
+      /* Card hover effect */
+      .card-interactive {
+        transition: box-shadow 200ms ease-out, transform 200ms ease-out;
+      }
+
+      .card-interactive:hover {
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+      }
+
+      .dark .card-interactive:hover {
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+      }
+
+      /* Button press effect */
+      .btn-press:active {
+        transform: scale(0.97);
+        transition: transform 100ms ease-out;
+      }
+
+      /* ============================================
+         Dark Mode Specific Improvements
+         ============================================ */
+
+      .dark {
+        /* Improved surface colors for better contrast */
+        --surface-1: #0f172a;
+        --surface-2: #1e293b;
+        --surface-3: #334155;
+        --surface-elevated: #1e293b;
+      }
+
+      /* Dark mode text contrast improvements */
+      .dark .text-gray-600 {
+        color: #94a3b8;
+      }
+
+      .dark .text-gray-500 {
+        color: #64748b;
+      }
+
+      /* Dark mode border improvements */
+      .dark .border-gray-200 {
+        border-color: #334155;
+      }
+
+      /* ============================================
+         Print Styles
+         ============================================ */
+
+      @media print {
+        .no-print {
+          display: none !important;
+        }
+
+        body {
+          background: white !important;
+          color: black !important;
+        }
+
+        a {
+          text-decoration: underline;
+        }
+      }
     </style>
   <link rel="stylesheet" href="/index.css">
 </head>
-  <body class="bg-oaxaca-stone dark:bg-gray-950 text-oaxaca-dark dark:text-gray-100 antialiased overflow-hidden transition-colors">
+  <body class="bg-oaxaca-stone dark:bg-gray-950 text-oaxaca-dark dark:text-gray-100 antialiased overflow-hidden transition-colors duration-200">
     <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>

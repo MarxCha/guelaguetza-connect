@@ -1,0 +1,242 @@
+/**
+ * EJEMPLO: Test de ruta con autenticación
+ *
+ * Este archivo es un ejemplo de cómo testear rutas protegidas con JWT.
+ * Para usarlo, renómbralo a .test.ts y ajusta según tus necesidades.
+ */
+
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { FastifyInstance } from 'fastify';
+import { createTestApp, closeTestApp, generateTestToken, mockUser } from './helpers.js';
+import { prismaMock } from './setup.js';
+
+describe('Protected Routes Example', () => {
+  let app: FastifyInstance;
+  let authToken: string;
+
+  beforeAll(async () => {
+    app = await createTestApp();
+    // Generar token JWT válido para tests
+    authToken = generateTestToken(app, {
+      id: mockUser.id,
+      email: mockUser.email
+    });
+  });
+
+  afterAll(async () => {
+    await closeTestApp(app);
+  });
+
+  describe('GET /api/auth/profile', () => {
+    it('should return user profile with valid token', async () => {
+      // Configurar mock de Prisma
+      prismaMock.user.findUnique.mockResolvedValue({
+        ...mockUser,
+        _count: {
+          stories: 5,
+          likes: 10,
+        },
+      } as any);
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/auth/profile',
+        headers: {
+          authorization: `Bearer ${authToken}`,
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body).toHaveProperty('id', mockUser.id);
+      expect(body).toHaveProperty('email', mockUser.email);
+      expect(body).toHaveProperty('_count');
+    });
+
+    it('should return 401 without token', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/auth/profile',
+      });
+
+      expect(response.statusCode).toBe(401);
+    });
+
+    it('should return 401 with invalid token', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/auth/profile',
+        headers: {
+          authorization: 'Bearer invalid-token-here',
+        },
+      });
+
+      expect(response.statusCode).toBe(401);
+    });
+  });
+
+  describe('POST /api/stories', () => {
+    it('should create story with authentication', async () => {
+      const newStory = {
+        titulo: 'Test Story',
+        contenido: 'Test content',
+        categoria: 'LEYENDA' as const,
+        region: 'Valles Centrales',
+      };
+
+      // Configurar mock
+      prismaMock.story.create.mockResolvedValue({
+        id: '1',
+        ...newStory,
+        userId: mockUser.id,
+        likes: 0,
+        comentarios: 0,
+        imageUrl: null,
+        audioUrl: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/stories',
+        headers: {
+          authorization: `Bearer ${authToken}`,
+          'content-type': 'application/json',
+        },
+        payload: newStory,
+      });
+
+      expect(response.statusCode).toBe(201);
+      const body = JSON.parse(response.body);
+      expect(body).toHaveProperty('id');
+      expect(body).toHaveProperty('titulo', newStory.titulo);
+      expect(prismaMock.story.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            titulo: newStory.titulo,
+            userId: mockUser.id,
+          }),
+        })
+      );
+    });
+
+    it('should validate required fields', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/stories',
+        headers: {
+          authorization: `Bearer ${authToken}`,
+          'content-type': 'application/json',
+        },
+        payload: {
+          // Missing required fields
+          titulo: 'Test',
+        },
+      });
+
+      expect(response.statusCode).toBe(422); // Validation error
+    });
+  });
+
+  describe('PUT /api/auth/profile', () => {
+    it('should update user profile', async () => {
+      const updateData = {
+        nombre: 'Updated Name',
+        apellido: 'Updated Lastname',
+      };
+
+      prismaMock.user.update.mockResolvedValue({
+        ...mockUser,
+        ...updateData,
+      });
+
+      const response = await app.inject({
+        method: 'PUT',
+        url: '/api/auth/profile',
+        headers: {
+          authorization: `Bearer ${authToken}`,
+          'content-type': 'application/json',
+        },
+        payload: updateData,
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body).toHaveProperty('nombre', updateData.nombre);
+      expect(prismaMock.user.update).toHaveBeenCalledWith({
+        where: { id: mockUser.id },
+        data: updateData,
+        select: expect.any(Object),
+      });
+    });
+  });
+
+  describe('DELETE /api/stories/:id', () => {
+    it('should delete own story', async () => {
+      const storyId = 'story-1';
+
+      // Mock: verificar que el story pertenece al usuario
+      prismaMock.story.findUnique.mockResolvedValue({
+        id: storyId,
+        userId: mockUser.id,
+        titulo: 'Test',
+        contenido: 'Content',
+        categoria: 'LEYENDA',
+        region: 'Valles Centrales',
+        likes: 0,
+        comentarios: 0,
+        imageUrl: null,
+        audioUrl: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      prismaMock.story.delete.mockResolvedValue({} as any);
+
+      const response = await app.inject({
+        method: 'DELETE',
+        url: `/api/stories/${storyId}`,
+        headers: {
+          authorization: `Bearer ${authToken}`,
+        },
+      });
+
+      expect(response.statusCode).toBe(204);
+      expect(prismaMock.story.delete).toHaveBeenCalledWith({
+        where: { id: storyId },
+      });
+    });
+
+    it('should not delete story from another user', async () => {
+      const storyId = 'story-2';
+
+      // Mock: story pertenece a otro usuario
+      prismaMock.story.findUnique.mockResolvedValue({
+        id: storyId,
+        userId: 'other-user-id', // Diferente usuario
+        titulo: 'Test',
+        contenido: 'Content',
+        categoria: 'LEYENDA',
+        region: 'Valles Centrales',
+        likes: 0,
+        comentarios: 0,
+        imageUrl: null,
+        audioUrl: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const response = await app.inject({
+        method: 'DELETE',
+        url: `/api/stories/${storyId}`,
+        headers: {
+          authorization: `Bearer ${authToken}`,
+        },
+      });
+
+      expect(response.statusCode).toBe(403); // Forbidden
+      expect(prismaMock.story.delete).not.toHaveBeenCalled();
+    });
+  });
+});

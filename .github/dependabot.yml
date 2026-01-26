@@ -1,0 +1,179 @@
+# ============================================
+# DEPENDABOT CONFIGURATION
+# ============================================
+# Automatiza actualizaciones de dependencias
+# y alertas de seguridad
+# ============================================
+
+version: 2
+
+updates:
+  # ============================================
+  # NPM - Frontend Dependencies
+  # ============================================
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/Mexico_City"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "marxchavez"
+    assignees:
+      - "marxchavez"
+    labels:
+      - "dependencies"
+      - "frontend"
+      - "automated"
+    commit-message:
+      prefix: "chore(deps):"
+      include: "scope"
+    # Agrupar actualizaciones menores/patch
+    groups:
+      react-ecosystem:
+        patterns:
+          - "react*"
+          - "@types/react*"
+      vite-ecosystem:
+        patterns:
+          - "vite*"
+          - "@vitejs/*"
+      testing:
+        patterns:
+          - "*vitest*"
+          - "@vitest/*"
+          - "*testing-library*"
+          - "playwright"
+      ui-libraries:
+        patterns:
+          - "lucide-react"
+          - "recharts"
+          - "three"
+          - "@react-three/*"
+          - "leaflet"
+          - "react-leaflet"
+    # Ignorar actualizaciones específicas si es necesario
+    ignore:
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
+
+  # ============================================
+  # NPM - Backend Dependencies
+  # ============================================
+  - package-ecosystem: "npm"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/Mexico_City"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "marxchavez"
+    assignees:
+      - "marxchavez"
+    labels:
+      - "dependencies"
+      - "backend"
+      - "automated"
+    commit-message:
+      prefix: "chore(deps):"
+      include: "scope"
+    # Agrupar actualizaciones menores/patch
+    groups:
+      fastify-ecosystem:
+        patterns:
+          - "fastify*"
+          - "@fastify/*"
+      prisma-ecosystem:
+        patterns:
+          - "prisma"
+          - "@prisma/*"
+      testing:
+        patterns:
+          - "*vitest*"
+          - "@vitest/*"
+          - "supertest"
+          - "@types/supertest"
+      aws-sdk:
+        patterns:
+          - "@aws-sdk/*"
+      security:
+        patterns:
+          - "bcryptjs"
+          - "@fastify/jwt"
+          - "@fastify/cors"
+          - "@fastify/rate-limit"
+    # Ignorar actualizaciones específicas
+    ignore:
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
+
+  # ============================================
+  # Docker - Base Images
+  # ============================================
+  - package-ecosystem: "docker"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "10:00"
+      timezone: "America/Mexico_City"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "marxchavez"
+    labels:
+      - "docker"
+      - "infrastructure"
+      - "automated"
+    commit-message:
+      prefix: "chore(docker):"
+
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "10:00"
+      timezone: "America/Mexico_City"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "marxchavez"
+    labels:
+      - "docker"
+      - "infrastructure"
+      - "automated"
+    commit-message:
+      prefix: "chore(docker):"
+
+  # ============================================
+  # GitHub Actions Workflows
+  # ============================================
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+      day: "1"
+      time: "10:00"
+      timezone: "America/Mexico_City"
+    open-pull-requests-limit: 2
+    reviewers:
+      - "marxchavez"
+    labels:
+      - "ci/cd"
+      - "github-actions"
+      - "automated"
+    commit-message:
+      prefix: "chore(ci):"
+
+# ============================================
+# SECURITY UPDATES
+# ============================================
+# Dependabot automáticamente crea PRs para
+# vulnerabilidades de seguridad críticas.
+# Configuración adicional en GitHub Settings:
+# - Security > Dependabot alerts: Enabled
+# - Security > Dependabot security updates: Enabled
+# ============================================

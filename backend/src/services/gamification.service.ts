@@ -1,5 +1,6 @@
 import { PrismaClient, BadgeCategory } from '@prisma/client';
 import { XP_VALUES, calculateLevel, getXpForNextLevel } from '../schemas/gamification.schema.js';
+import { CacheService } from './cache.service.js';
 
 export interface UserStatsResponse {
   xp: number;
@@ -33,10 +34,29 @@ export interface LeaderboardEntry {
 }
 
 export class GamificationService {
-  constructor(private prisma: PrismaClient) {}
+  // Cache TTLs (in seconds)
+  private readonly CACHE_TTL = {
+    BADGES_ALL: 3600, // 1 hora - los badges casi nunca cambian
+    USER_BADGES: 300, // 5 minutos
+    USER_STATS: 60, // 1 minuto - se actualizan frecuentemente
+    LEADERBOARD: 300, // 5 minutos
+    USER_RANK: 300, // 5 minutos
+  };
+
+  constructor(
+    private prisma: PrismaClient,
+    private cache?: CacheService
+  ) {}
 
   // Get or create user stats
   async getOrCreateStats(userId: string): Promise<UserStatsResponse> {
+    // Try cache first
+    const cacheKey = `user:${userId}:stats`;
+    if (this.cache) {
+      const cached = await this.cache.get<UserStatsResponse>(cacheKey);
+      if (cached) return cached;
+    }
+
     let stats = await this.prisma.userStats.findUnique({
       where: { userId },
     });
@@ -52,7 +72,7 @@ export class GamificationService {
     const nextLevelXp = getXpForNextLevel(level);
     const xpProgress = ((stats.xp - currentLevelXp) / (nextLevelXp - currentLevelXp)) * 100;
 
-    return {
+    const result = {
       xp: stats.xp,
       level,
       xpForNextLevel: nextLevelXp,
@@ -60,6 +80,13 @@ export class GamificationService {
       currentStreak: stats.currentStreak,
       longestStreak: stats.longestStreak,
     };
+
+    // Cache result
+    if (this.cache) {
+      await this.cache.set(cacheKey, result, this.CACHE_TTL.USER_STATS);
+    }
+
+    return result;
   }
 
   // Add XP to user
@@ -86,6 +113,15 @@ export class GamificationService {
       });
     }
 
+    // Invalidate user cache when XP changes
+    if (this.cache) {
+      await Promise.all([
+        this.cache.del(`user:${userId}:stats`),
+        this.cache.del(`user:${userId}:rank`),
+        this.invalidateLeaderboardCache(),
+      ]);
+    }
+
     return {
       newXp: stats.xp,
       leveledUp,
@@ -102,6 +138,8 @@ export class GamificationService {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    let result: { streak: number; isNewDay: boolean; xpAwarded: number };
+
     if (!stats) {
       // First visit
       await this.prisma.userStats.create({
@@ -113,69 +151,80 @@ export class GamificationService {
           xp: XP_VALUES.DAILY_CHECK_IN,
         },
       });
-      return { streak: 1, isNewDay: true, xpAwarded: XP_VALUES.DAILY_CHECK_IN };
+      result = { streak: 1, isNewDay: true, xpAwarded: XP_VALUES.DAILY_CHECK_IN };
+    } else {
+      const lastVisit = stats.lastVisitDate ? new Date(stats.lastVisitDate) : null;
+
+      if (!lastVisit) {
+        // First tracked visit
+        await this.prisma.userStats.update({
+          where: { userId },
+          data: {
+            currentStreak: 1,
+            longestStreak: Math.max(1, stats.longestStreak),
+            lastVisitDate: today,
+            xp: { increment: XP_VALUES.DAILY_CHECK_IN },
+          },
+        });
+        result = { streak: 1, isNewDay: true, xpAwarded: XP_VALUES.DAILY_CHECK_IN };
+      } else {
+        lastVisit.setHours(0, 0, 0, 0);
+        const dayDiff = Math.floor((today.getTime() - lastVisit.getTime()) / (1000 * 60 * 60 * 24));
+
+        if (dayDiff === 0) {
+          // Same day
+          result = { streak: stats.currentStreak, isNewDay: false, xpAwarded: 0 };
+        } else if (dayDiff === 1) {
+          // Consecutive day
+          const newStreak = stats.currentStreak + 1;
+          const newLongest = Math.max(newStreak, stats.longestStreak);
+
+          await this.prisma.userStats.update({
+            where: { userId },
+            data: {
+              currentStreak: newStreak,
+              longestStreak: newLongest,
+              lastVisitDate: today,
+              xp: { increment: XP_VALUES.DAILY_CHECK_IN },
+            },
+          });
+
+          result = { streak: newStreak, isNewDay: true, xpAwarded: XP_VALUES.DAILY_CHECK_IN };
+        } else {
+          // Streak broken
+          await this.prisma.userStats.update({
+            where: { userId },
+            data: {
+              currentStreak: 1,
+              lastVisitDate: today,
+              xp: { increment: XP_VALUES.DAILY_CHECK_IN },
+            },
+          });
+
+          result = { streak: 1, isNewDay: true, xpAwarded: XP_VALUES.DAILY_CHECK_IN };
+        }
+      }
     }
 
-    const lastVisit = stats.lastVisitDate ? new Date(stats.lastVisitDate) : null;
-
-    if (!lastVisit) {
-      // First tracked visit
-      await this.prisma.userStats.update({
-        where: { userId },
-        data: {
-          currentStreak: 1,
-          longestStreak: Math.max(1, stats.longestStreak),
-          lastVisitDate: today,
-          xp: { increment: XP_VALUES.DAILY_CHECK_IN },
-        },
-      });
-      return { streak: 1, isNewDay: true, xpAwarded: XP_VALUES.DAILY_CHECK_IN };
+    // Invalidate cache if data changed
+    if (result.isNewDay && this.cache) {
+      await this.invalidateUserCache(userId);
     }
 
-    lastVisit.setHours(0, 0, 0, 0);
-    const dayDiff = Math.floor((today.getTime() - lastVisit.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (dayDiff === 0) {
-      // Same day
-      return { streak: stats.currentStreak, isNewDay: false, xpAwarded: 0 };
-    }
-
-    if (dayDiff === 1) {
-      // Consecutive day
-      const newStreak = stats.currentStreak + 1;
-      const newLongest = Math.max(newStreak, stats.longestStreak);
-
-      await this.prisma.userStats.update({
-        where: { userId },
-        data: {
-          currentStreak: newStreak,
-          longestStreak: newLongest,
-          lastVisitDate: today,
-          xp: { increment: XP_VALUES.DAILY_CHECK_IN },
-        },
-      });
-
-      return { streak: newStreak, isNewDay: true, xpAwarded: XP_VALUES.DAILY_CHECK_IN };
-    }
-
-    // Streak broken
-    await this.prisma.userStats.update({
-      where: { userId },
-      data: {
-        currentStreak: 1,
-        lastVisitDate: today,
-        xp: { increment: XP_VALUES.DAILY_CHECK_IN },
-      },
-    });
-
-    return { streak: 1, isNewDay: true, xpAwarded: XP_VALUES.DAILY_CHECK_IN };
+    return result;
   }
 
   // Get all badges for a user
   async getUserBadges(userId: string): Promise<BadgeResponse[]> {
-    const allBadges = await this.prisma.badge.findMany({
-      orderBy: [{ category: 'asc' }, { threshold: 'asc' }],
-    });
+    // Try cache first
+    const cacheKey = `user:${userId}:badges`;
+    if (this.cache) {
+      const cached = await this.cache.get<BadgeResponse[]>(cacheKey);
+      if (cached) return cached;
+    }
+
+    // Fetch all badges (cache them separately as they rarely change)
+    const allBadges = await this.getAllBadges();
 
     const userBadges = await this.prisma.userBadge.findMany({
       where: { userId },
@@ -186,7 +235,7 @@ export class GamificationService {
       userBadges.map((ub) => [ub.badgeId, ub.unlockedAt])
     );
 
-    return allBadges.map((badge) => ({
+    const result = allBadges.map((badge) => ({
       id: badge.id,
       code: badge.code,
       name: badge.name,
@@ -198,6 +247,32 @@ export class GamificationService {
       unlockedAt: userBadgeMap.get(badge.id)?.toISOString(),
       isUnlocked: userBadgeMap.has(badge.id),
     }));
+
+    // Cache result
+    if (this.cache) {
+      await this.cache.set(cacheKey, result, this.CACHE_TTL.USER_BADGES);
+    }
+
+    return result;
+  }
+
+  // Helper: Get all badges (cached)
+  private async getAllBadges() {
+    const cacheKey = 'badges:all';
+    if (this.cache) {
+      const cached = await this.cache.get(cacheKey);
+      if (cached) return cached;
+    }
+
+    const badges = await this.prisma.badge.findMany({
+      orderBy: [{ category: 'asc' }, { threshold: 'asc' }],
+    });
+
+    if (this.cache) {
+      await this.cache.set(cacheKey, badges, this.CACHE_TTL.BADGES_ALL);
+    }
+
+    return badges;
   }
 
   // Check and award badges based on user actions
@@ -320,6 +395,11 @@ export class GamificationService {
       }
     }
 
+    // Invalidate badges cache if new badges were awarded
+    if (newBadges.length > 0 && this.cache) {
+      await this.cache.del(`user:${userId}:badges`);
+    }
+
     return newBadges;
   }
 
@@ -328,6 +408,13 @@ export class GamificationService {
     page: number = 1,
     limit: number = 20
   ): Promise<{ entries: LeaderboardEntry[]; total: number }> {
+    // Try cache first
+    const cacheKey = `leaderboard:page:${page}:limit:${limit}`;
+    if (this.cache) {
+      const cached = await this.cache.get<{ entries: LeaderboardEntry[]; total: number }>(cacheKey);
+      if (cached) return cached;
+    }
+
     const skip = (page - 1) * limit;
 
     const [entries, total] = await Promise.all([
@@ -344,7 +431,7 @@ export class GamificationService {
       this.prisma.userStats.count(),
     ]);
 
-    return {
+    const result = {
       entries: entries.map((entry, index) => ({
         rank: skip + index + 1,
         userId: entry.user.id,
@@ -355,10 +442,24 @@ export class GamificationService {
       })),
       total,
     };
+
+    // Cache result
+    if (this.cache) {
+      await this.cache.set(cacheKey, result, this.CACHE_TTL.LEADERBOARD);
+    }
+
+    return result;
   }
 
   // Get user rank
   async getUserRank(userId: string): Promise<number> {
+    // Try cache first
+    const cacheKey = `user:${userId}:rank`;
+    if (this.cache) {
+      const cached = await this.cache.get<number>(cacheKey);
+      if (cached !== null) return cached;
+    }
+
     const userStats = await this.prisma.userStats.findUnique({
       where: { userId },
     });
@@ -369,6 +470,29 @@ export class GamificationService {
       where: { xp: { gt: userStats.xp } },
     });
 
-    return higherRanked + 1;
+    const rank = higherRanked + 1;
+
+    // Cache result
+    if (this.cache) {
+      await this.cache.set(cacheKey, rank, this.CACHE_TTL.USER_RANK);
+    }
+
+    return rank;
+  }
+
+  // Invalidate leaderboard cache (call when XP changes)
+  async invalidateLeaderboardCache(): Promise<void> {
+    if (!this.cache) return;
+    await this.cache.invalidate('leaderboard:*');
+  }
+
+  // Invalidate user cache (call when user data changes)
+  async invalidateUserCache(userId: string): Promise<void> {
+    if (!this.cache) return;
+    await Promise.all([
+      this.cache.del(`user:${userId}:badges`),
+      this.cache.del(`user:${userId}:rank`),
+      this.cache.del(`user:${userId}:stats`),
+    ]);
   }
 }

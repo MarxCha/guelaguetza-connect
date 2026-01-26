@@ -15,22 +15,23 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variants = {
-  primary: 'bg-oaxaca-pink text-white hover:bg-oaxaca-pink/90 active:bg-oaxaca-pink/80 shadow-sm',
-  secondary: 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700',
-  outline: 'border-2 border-oaxaca-pink text-oaxaca-pink hover:bg-oaxaca-pink/10 dark:hover:bg-oaxaca-pink/20',
-  ghost: 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800',
-  danger: 'bg-red-500 text-white hover:bg-red-600 active:bg-red-700 shadow-sm',
-  success: 'bg-green-500 text-white hover:bg-green-600 active:bg-green-700 shadow-sm',
-  link: 'text-oaxaca-pink hover:underline underline-offset-4 p-0',
-  gradient: 'bg-gradient-to-r from-oaxaca-pink to-oaxaca-earth text-white hover:opacity-90 shadow-md',
+  primary: 'bg-oaxaca-pink text-white hover:bg-oaxaca-pink/90 active:bg-oaxaca-pink/80 shadow-sm focus-visible:ring-2 focus-visible:ring-oaxaca-pink focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900',
+  secondary: 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700 focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900',
+  outline: 'border-2 border-oaxaca-pink text-oaxaca-pink hover:bg-oaxaca-pink/10 dark:hover:bg-oaxaca-pink/20 focus-visible:ring-2 focus-visible:ring-oaxaca-pink focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900',
+  ghost: 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900',
+  danger: 'bg-red-500 text-white hover:bg-red-600 active:bg-red-700 shadow-sm focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900',
+  success: 'bg-green-500 text-white hover:bg-green-600 active:bg-green-700 shadow-sm focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900',
+  link: 'text-oaxaca-pink hover:underline underline-offset-4 p-0 focus-visible:ring-2 focus-visible:ring-oaxaca-pink rounded',
+  gradient: 'bg-gradient-to-r from-oaxaca-pink to-oaxaca-earth text-white hover:opacity-90 shadow-md focus-visible:ring-2 focus-visible:ring-oaxaca-pink focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900',
 };
 
+// Sizes with minimum touch target of 44px for accessibility
 const sizes = {
-  xs: 'px-2 py-1 text-xs',
-  sm: 'px-3 py-1.5 text-sm',
-  md: 'px-4 py-2.5 text-base',
-  lg: 'px-6 py-3.5 text-lg',
-  xl: 'px-8 py-4 text-xl',
+  xs: 'px-2 py-1 text-xs min-h-[32px]',
+  sm: 'px-3 py-1.5 text-sm min-h-[36px]',
+  md: 'px-4 py-2.5 text-base min-h-[44px]',
+  lg: 'px-6 py-3.5 text-lg min-h-[48px]',
+  xl: 'px-8 py-4 text-xl min-h-[56px]',
 };
 
 const roundedClasses = {
@@ -58,15 +59,16 @@ const Button: React.FC<ButtonProps> = ({
   return (
     <button
       className={`
-        inline-flex items-center justify-center gap-2 font-medium transition-all
+        inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 outline-none
         ${variants[variant]}
         ${isLinkVariant ? '' : sizes[size]}
         ${isLinkVariant ? '' : roundedClasses[rounded]}
         ${fullWidth ? 'w-full' : ''}
-        ${disabled || loading ? 'opacity-50 cursor-not-allowed' : 'active:scale-[0.98]'}
+        ${disabled || loading ? 'opacity-50 cursor-not-allowed' : 'active:scale-[0.98] hover:shadow-md'}
         ${className}
       `}
       disabled={disabled || loading}
+      aria-busy={loading}
       {...props}
     >
       {loading ? (

@@ -4,7 +4,7 @@ import { MOCK_PRODUCTS, MOCK_USERS } from './mockData';
 // Types
 export type ProductCategory = 'ARTESANIA' | 'MEZCAL' | 'TEXTIL' | 'CERAMICA' | 'JOYERIA' | 'GASTRONOMIA' | 'OTRO';
 export type ProductStatus = 'DRAFT' | 'ACTIVE' | 'SOLD_OUT' | 'ARCHIVED';
-export type OrderStatus = 'PENDING' | 'PAID' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'REFUNDED';
+export type OrderStatus = 'PENDING_PAYMENT' | 'PAYMENT_FAILED' | 'PENDING' | 'PAID' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'REFUNDED';
 
 export interface SellerProfile {
   id: string;
@@ -458,6 +458,27 @@ export async function getMyOrders(query: OrderQuery = {}) {
 
 export async function getOrder(id: string) {
   const response = await api.get<Order>(`/marketplace/orders/${id}`);
+  return response;
+}
+
+export async function retryOrderPayment(id: string) {
+  try {
+    // En el futuro, esto llamará al backend para reintentar el pago
+    // Por ahora, creamos un nuevo intento de pago con Stripe
+    const response = await api.post<{
+      order: Order;
+      clientSecret: string | null;
+      paymentIntentId?: string;
+    }>(`/marketplace/orders/${id}/retry-payment`, {});
+    return response;
+  } catch (error) {
+    // Si el backend no tiene el endpoint aún, devolvemos un error descriptivo
+    throw new Error('El sistema de reintentos de pago no está disponible. Por favor, crea una nueva orden.');
+  }
+}
+
+export async function cancelOrder(id: string) {
+  const response = await api.post<Order>(`/marketplace/orders/${id}/cancel`, {});
   return response;
 }
 

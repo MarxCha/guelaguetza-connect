@@ -85,6 +85,10 @@ model User {
   hostedExperiences   Experience[]
   bookings            Booking[]
   experienceReviews   ExperienceReview[]
+
+  @@index([email])
+  @@index([role])
+  @@index([createdAt])
 }
 
 model Story {
@@ -103,6 +107,8 @@ model Story {
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   likes    Like[]
   comments Comment[]
+
+  @@index([userId, createdAt])
 }
 
 enum MediaType {
@@ -120,6 +126,8 @@ model Like {
   story   Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
 
   @@unique([userId, storyId])
+  @@index([storyId])
+  @@index([userId])
 }
 
 model Comment {
@@ -131,6 +139,9 @@ model Comment {
   storyId String
   user    User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   story   Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  @@index([storyId, createdAt])
+  @@index([userId])
 }
 
 model BusRoute {
@@ -299,7 +310,7 @@ model Notification {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId, read])
+  @@index([userId, read, createdAt])
   @@index([createdAt])
 }
 
@@ -423,9 +434,11 @@ model ActivityLog {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId, action])
   @@index([userId, createdAt])
   @@index([action, createdAt])
   @@index([targetType, targetId])
+  @@index([createdAt])
 }
 
 // ============================================
@@ -507,7 +520,9 @@ enum ProductStatus {
 }
 
 enum OrderStatus {
+  PENDING_PAYMENT
   PENDING
+  PAYMENT_FAILED
   PAID
   PROCESSING
   SHIPPED
@@ -547,6 +562,7 @@ model Product {
   status      ProductStatus   @default(DRAFT)
   stock       Int             @default(0)
   images      String[]
+  version     Int             @default(1)
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
@@ -556,7 +572,11 @@ model Product {
   reviews    ProductReview[]
 
   @@index([sellerId])
+  @@index([sellerId, status])
   @@index([category, status])
+  @@index([category, status, createdAt])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model Cart {
@@ -597,8 +617,14 @@ model Order {
   items  OrderItem[]
 
   @@index([userId])
+  @@index([userId, status])
+  @@index([userId, createdAt])
   @@index([sellerId])
+  @@index([sellerId, status])
+  @@index([sellerId, createdAt])
   @@index([status])
+  @@index([createdAt])
+  @@index([stripePaymentId])
 }
 
 model OrderItem {
@@ -770,7 +796,9 @@ enum ExperienceCategory {
 }
 
 enum BookingStatus {
+  PENDING_PAYMENT
   PENDING
+  PAYMENT_FAILED
   CONFIRMED
   CANCELLED
   COMPLETED
@@ -805,7 +833,10 @@ model Experience {
 
   @@index([hostId])
   @@index([category])
+  @@index([category, isActive])
   @@index([isActive])
+  @@index([isActive, createdAt])
+  @@index([createdAt])
 }
 
 model ExperienceTimeSlot {
@@ -817,13 +848,19 @@ model ExperienceTimeSlot {
   capacity     Int
   bookedCount  Int      @default(0)
   isAvailable  Boolean  @default(true)
+  version      Int      @default(1)
   createdAt    DateTime @default(now())
 
   experience Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
   bookings   Booking[]
 
+  @@index([experienceId])
   @@index([experienceId, date])
+  @@index([experienceId, startTime])
+  @@index([experienceId, date, isAvailable])
+  @@index([date])
   @@index([date, isAvailable])
+  @@index([isAvailable])
 }
 
 model Booking {
@@ -845,10 +882,17 @@ model Booking {
   experience Experience         @relation(fields: [experienceId], references: [id])
   timeSlot   ExperienceTimeSlot @relation(fields: [timeSlotId], references: [id])
 
+  @@unique([userId, timeSlotId])
   @@index([userId])
+  @@index([userId, status])
+  @@index([userId, createdAt])
   @@index([experienceId])
+  @@index([experienceId, status])
   @@index([timeSlotId])
   @@index([status])
+  @@index([status, createdAt])
+  @@index([createdAt])
+  @@index([stripePaymentId])
 }
 
 model ExperienceReview {
@@ -863,4 +907,21 @@ model ExperienceReview {
   experience Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
 
   @@unique([userId, experienceId])
+}
+
+// ============================================
+// WEBHOOKS: Event Processing Log
+// ============================================
+model WebhookEvent {
+  id            String   @id @default(cuid())
+  stripeEventId String   @unique // Stripe event.id for idempotency
+  eventType     String   // payment_intent.succeeded, charge.refunded, etc.
+  processed     Boolean  @default(false)
+  processedAt   DateTime?
+  payload       Json?    // Optional: store full event payload for debugging
+  error         String?  // Store error message if processing failed
+  createdAt     DateTime @default(now())
+
+  @@index([stripeEventId])
+  @@index([eventType, createdAt])
 }

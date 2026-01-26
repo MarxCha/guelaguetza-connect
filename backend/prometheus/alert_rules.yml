@@ -1,0 +1,289 @@
+# Prometheus Alert Rules for Guelaguetza Connect
+#
+# These rules define alerting conditions for the application.
+# Alerts are sent to Alertmanager for routing and notification.
+
+groups:
+  - name: guelaguetza_api_alerts
+    rules:
+      # =====================================================
+      # API Health Alerts
+      # =====================================================
+
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(guelaguetza_http_requests_total{status_code=~"5.."}[5m]))
+            /
+            sum(rate(guelaguetza_http_requests_total[5m]))
+          ) * 100 > 5
+        for: 5m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | printf \"%.2f\" }}% (threshold: 5%) for the last 5 minutes"
+          runbook_url: "https://wiki.guelaguetza.com/runbooks/high-error-rate"
+
+      - alert: HighLatencyP99
+        expr: |
+          histogram_quantile(0.99, sum(rate(guelaguetza_http_request_duration_seconds_bucket[5m])) by (le)) > 2
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High P99 latency detected"
+          description: "P99 latency is {{ $value | printf \"%.2f\" }}s (threshold: 2s) for the last 5 minutes"
+          runbook_url: "https://wiki.guelaguetza.com/runbooks/high-latency"
+
+      - alert: HighLatencyP95
+        expr: |
+          histogram_quantile(0.95, sum(rate(guelaguetza_http_request_duration_seconds_bucket[5m])) by (le)) > 1
+        for: 10m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High P95 latency detected"
+          description: "P95 latency is {{ $value | printf \"%.2f\" }}s (threshold: 1s) for the last 10 minutes"
+
+      - alert: APIDown
+        expr: up{job="guelaguetza-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "Guelaguetza API is down"
+          description: "The API endpoint has been unreachable for more than 1 minute"
+          runbook_url: "https://wiki.guelaguetza.com/runbooks/api-down"
+
+      # =====================================================
+      # Booking Alerts
+      # =====================================================
+
+      - alert: HighBookingFailureRate
+        expr: |
+          sum(increase(guelaguetza_bookings_failed_total[1h])) > 10
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High booking failure rate"
+          description: "{{ $value }} bookings have failed in the last hour (threshold: 10)"
+          runbook_url: "https://wiki.guelaguetza.com/runbooks/booking-failures"
+
+      - alert: BookingCreationSlowdown
+        expr: |
+          histogram_quantile(0.95, sum(rate(guelaguetza_booking_creation_duration_seconds_bucket[5m])) by (le)) > 3
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Booking creation is slow"
+          description: "P95 booking creation time is {{ $value | printf \"%.2f\" }}s (threshold: 3s)"
+
+      - alert: NoBookingsCreated
+        expr: |
+          sum(increase(guelaguetza_bookings_created_total[1h])) == 0
+        for: 2h
+        labels:
+          severity: info
+          team: business
+        annotations:
+          summary: "No bookings created in the last 2 hours"
+          description: "Zero bookings have been created in the last 2 hours during business hours"
+
+      # =====================================================
+      # Order Alerts
+      # =====================================================
+
+      - alert: HighOrderFailureRate
+        expr: |
+          sum(increase(guelaguetza_orders_failed_total[1h])) > 10
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High order failure rate"
+          description: "{{ $value }} orders have failed in the last hour (threshold: 10)"
+          runbook_url: "https://wiki.guelaguetza.com/runbooks/order-failures"
+
+      - alert: OrderCreationSlowdown
+        expr: |
+          histogram_quantile(0.95, sum(rate(guelaguetza_order_creation_duration_seconds_bucket[5m])) by (le)) > 3
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Order creation is slow"
+          description: "P95 order creation time is {{ $value | printf \"%.2f\" }}s (threshold: 3s)"
+
+      # =====================================================
+      # Payment Alerts
+      # =====================================================
+
+      - alert: HighPaymentFailureRate
+        expr: |
+          (
+            sum(rate(guelaguetza_payments_processed_total{status="failed"}[15m]))
+            /
+            sum(rate(guelaguetza_payments_processed_total[15m]))
+          ) * 100 > 10
+        for: 5m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "High payment failure rate"
+          description: "Payment failure rate is {{ $value | printf \"%.2f\" }}% (threshold: 10%)"
+          runbook_url: "https://wiki.guelaguetza.com/runbooks/payment-failures"
+
+      - alert: StripeAPISlowdown
+        expr: |
+          histogram_quantile(0.95, sum(rate(guelaguetza_stripe_api_duration_seconds_bucket[5m])) by (le)) > 5
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Stripe API is slow"
+          description: "P95 Stripe API latency is {{ $value | printf \"%.2f\" }}s (threshold: 5s)"
+
+      - alert: ManyPendingPayments
+        expr: |
+          sum(guelaguetza_pending_payments_count) > 50
+        for: 30m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Many pending payments"
+          description: "{{ $value }} payments have been pending for more than 30 minutes"
+
+      # =====================================================
+      # Inventory Alerts
+      # =====================================================
+
+      - alert: ProductsLowStock
+        expr: guelaguetza_products_low_stock_count > 20
+        for: 1h
+        labels:
+          severity: warning
+          team: business
+        annotations:
+          summary: "Many products with low stock"
+          description: "{{ $value }} products have low stock (< 10 units)"
+
+      - alert: HighConcurrencyConflicts
+        expr: |
+          sum(rate(guelaguetza_concurrency_conflicts_total[15m])) * 60 > 5
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High concurrency conflicts"
+          description: "{{ $value | printf \"%.2f\" }} conflicts per minute (threshold: 5)"
+          runbook_url: "https://wiki.guelaguetza.com/runbooks/concurrency-conflicts"
+
+      # =====================================================
+      # Database Alerts
+      # =====================================================
+
+      - alert: DatabaseSlowQueries
+        expr: |
+          histogram_quantile(0.95, sum(rate(guelaguetza_db_query_duration_seconds_bucket[5m])) by (le)) > 1
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Database queries are slow"
+          description: "P95 database query time is {{ $value | printf \"%.2f\" }}s (threshold: 1s)"
+          runbook_url: "https://wiki.guelaguetza.com/runbooks/slow-queries"
+
+      # =====================================================
+      # Authentication Alerts
+      # =====================================================
+
+      - alert: HighAuthErrorRate
+        expr: |
+          sum(rate(guelaguetza_auth_errors_total[5m])) * 60 > 100
+        for: 5m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "High authentication error rate"
+          description: "{{ $value | printf \"%.0f\" }} auth errors per minute (threshold: 100)"
+          runbook_url: "https://wiki.guelaguetza.com/runbooks/auth-errors"
+
+      - alert: PossibleBruteForceAttack
+        expr: |
+          sum(rate(guelaguetza_auth_errors_total{type="invalid_token"}[5m])) * 60 > 50
+        for: 2m
+        labels:
+          severity: critical
+          team: security
+        annotations:
+          summary: "Possible brute force attack detected"
+          description: "{{ $value | printf \"%.0f\" }} invalid token attempts per minute"
+          runbook_url: "https://wiki.guelaguetza.com/runbooks/brute-force"
+
+      # =====================================================
+      # Node.js Runtime Alerts
+      # =====================================================
+
+      - alert: HighMemoryUsage
+        expr: |
+          (guelaguetza_nodejs_heap_size_used_bytes / guelaguetza_nodejs_heap_size_total_bytes) * 100 > 85
+        for: 10m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High heap memory usage"
+          description: "Heap memory usage is {{ $value | printf \"%.2f\" }}% (threshold: 85%)"
+
+      - alert: HighEventLoopLag
+        expr: guelaguetza_nodejs_eventloop_lag_seconds > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High event loop lag"
+          description: "Event loop lag is {{ $value | printf \"%.3f\" }}s (threshold: 0.5s)"
+
+      # =====================================================
+      # Cleanup Job Alerts
+      # =====================================================
+
+      - alert: CleanupJobsFailing
+        expr: |
+          sum(increase(guelaguetza_cleanup_jobs_executed_total{status="failed"}[1h])) > 3
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Cleanup jobs are failing"
+          description: "{{ $value }} cleanup jobs have failed in the last hour"
+
+      - alert: CleanupJobsNotRunning
+        expr: |
+          sum(increase(guelaguetza_cleanup_jobs_executed_total[2h])) == 0
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Cleanup jobs are not running"
+          description: "No cleanup jobs have executed in the last 2 hours"

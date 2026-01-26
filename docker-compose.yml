@@ -1,0 +1,173 @@
+# ============================================
+# DOCKER COMPOSE - DESARROLLO
+# ============================================
+# Stack: PostgreSQL + Redis + Backend (Fastify) + Frontend (Vite)
+# Hot reload habilitado para desarrollo
+# ============================================
+
+version: '3.9'
+
+services:
+  # ============================================
+  # DATABASE: PostgreSQL 15
+  # ============================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: guelaguetza-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: guelaguetza_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_INITDB_ARGS: "-E UTF8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/scripts/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d guelaguetza_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - guelaguetza-network
+
+  # ============================================
+  # CACHE: Redis 7
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    container_name: guelaguetza-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    networks:
+      - guelaguetza-network
+
+  # ============================================
+  # BACKEND: Fastify API (Development)
+  # ============================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: guelaguetza-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/guelaguetza_db?connection_limit=10&pool_timeout=20
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      CORS_ORIGINS: http://localhost:3000,http://localhost:5173
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      # Stripe (opcional para desarrollo)
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      # Feature flags
+      ENABLE_PAYMENTS: ${ENABLE_PAYMENTS:-true}
+      ENABLE_NOTIFICATIONS: ${ENABLE_NOTIFICATIONS:-true}
+      ENABLE_ANALYTICS: ${ENABLE_ANALYTICS:-true}
+    ports:
+      - "3001:3001"
+    volumes:
+      # Hot reload: mount source code
+      - ./backend/src:/app/src:cached
+      - ./backend/prisma:/app/prisma:cached
+      - ./backend/package.json:/app/package.json:ro
+      - ./backend/tsconfig.json:/app/tsconfig.json:ro
+      # Don't mount node_modules (use container's)
+      - backend_node_modules:/app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    networks:
+      - guelaguetza-network
+    command: npm run dev
+
+  # ============================================
+  # FRONTEND: Vite + React (Development)
+  # ============================================
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      target: development
+    container_name: guelaguetza-frontend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      VITE_API_URL: http://localhost:3001
+      VITE_STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
+    ports:
+      - "5173:5173"
+    volumes:
+      # Hot reload: mount source code
+      - ./src:/app/src:cached
+      - ./components:/app/components:cached
+      - ./services:/app/services:cached
+      - ./contexts:/app/contexts:cached
+      - ./hooks:/app/hooks:cached
+      - ./utils:/app/utils:cached
+      - ./public:/app/public:cached
+      - ./index.html:/app/index.html:ro
+      - ./index.tsx:/app/index.tsx:ro
+      - ./package.json:/app/package.json:ro
+      - ./vite.config.ts:/app/vite.config.ts:ro
+      - ./tsconfig.json:/app/tsconfig.json:ro
+      # Don't mount node_modules
+      - frontend_node_modules:/app/node_modules
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5173"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - guelaguetza-network
+    command: npm run dev -- --host 0.0.0.0
+
+# ============================================
+# VOLUMES: Persistent Data
+# ============================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  backend_node_modules:
+    driver: local
+  frontend_node_modules:
+    driver: local
+
+# ============================================
+# NETWORKS
+# ============================================
+networks:
+  guelaguetza-network:
+    driver: bridge
+    name: guelaguetza-network

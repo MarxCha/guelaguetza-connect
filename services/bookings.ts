@@ -3,7 +3,7 @@ import { MOCK_EXPERIENCES } from './mockData';
 
 // Types
 export type ExperienceCategory = 'TOUR' | 'TALLER' | 'DEGUSTACION' | 'CLASE' | 'VISITA';
-export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
+export type BookingStatus = 'PENDING_PAYMENT' | 'PAYMENT_FAILED' | 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
 
 export interface Experience {
   id: string;
@@ -508,6 +508,22 @@ export async function completeBooking(id: string) {
   return response;
 }
 
+export async function retryBookingPayment(id: string) {
+  try {
+    // En el futuro, esto llamará al backend para reintentar el pago
+    // Por ahora, creamos un nuevo intento de pago con Stripe
+    const response = await api.post<{
+      booking: Booking;
+      clientSecret: string | null;
+      paymentIntentId?: string;
+    }>(`/bookings/bookings/${id}/retry-payment`, {});
+    return response;
+  } catch (error) {
+    // Si el backend no tiene el endpoint aún, devolvemos un error descriptivo
+    throw new Error('El sistema de reintentos de pago no está disponible. Por favor, crea una nueva reservación.');
+  }
+}
+
 // Reviews
 export async function createExperienceReview(experienceId: string, data: { rating: number; comment?: string }) {
   const response = await api.post<ExperienceReview>(`/bookings/experiences/${experienceId}/reviews`, data);
@@ -548,6 +564,8 @@ export const CATEGORY_LABELS: Record<ExperienceCategory, string> = {
 };
 
 export const STATUS_LABELS: Record<BookingStatus, string> = {
+  PENDING_PAYMENT: 'Procesando pago',
+  PAYMENT_FAILED: 'Error en pago',
   PENDING: 'Pendiente',
   CONFIRMED: 'Confirmada',
   CANCELLED: 'Cancelada',
@@ -555,10 +573,12 @@ export const STATUS_LABELS: Record<BookingStatus, string> = {
 };
 
 export const STATUS_COLORS: Record<BookingStatus, string> = {
-  PENDING: 'yellow',
+  PENDING_PAYMENT: 'amber',
+  PAYMENT_FAILED: 'red',
+  PENDING: 'blue',
   CONFIRMED: 'green',
-  CANCELLED: 'red',
-  COMPLETED: 'blue',
+  CANCELLED: 'gray',
+  COMPLETED: 'emerald',
 };
 
 export function formatDuration(minutes: number): string {

@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import { AuthProvider } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { ToastProvider } from './components/ui/Toast';
 import { registerServiceWorker } from './services/pwa';
 
@@ -17,12 +18,14 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <AuthProvider>
-      <LanguageProvider>
-        <ToastProvider>
-          <App />
-        </ToastProvider>
-      </LanguageProvider>
-    </AuthProvider>
+    <ThemeProvider defaultTheme="system">
+      <AuthProvider>
+        <LanguageProvider>
+          <ToastProvider>
+            <App />
+          </ToastProvider>
+        </LanguageProvider>
+      </AuthProvider>
+    </ThemeProvider>
   </React.StrictMode>
 );

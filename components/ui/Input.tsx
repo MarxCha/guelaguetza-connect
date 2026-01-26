@@ -62,10 +62,11 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
   ) => {
     const [isFocused, setIsFocused] = useState(false);
 
+    // Sizes with minimum touch target of 44px for accessibility (WCAG 2.1 SC 2.5.5)
     const sizes = {
-      sm: { input: 'h-9 text-sm', icon: 'w-4 h-4', label: 'text-xs' },
-      md: { input: 'h-11 text-base', icon: 'w-5 h-5', label: 'text-sm' },
-      lg: { input: 'h-13 text-lg', icon: 'w-6 h-6', label: 'text-base' },
+      sm: { input: 'h-10 text-sm min-h-[40px]', icon: 'w-4 h-4', label: 'text-xs' },
+      md: { input: 'h-11 text-base min-h-[44px]', icon: 'w-5 h-5', label: 'text-sm' },
+      lg: { input: 'h-13 text-lg min-h-[52px]', icon: 'w-6 h-6', label: 'text-base' },
     };
 
     const variants = {
@@ -92,6 +93,29 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 
     const sizeConfig = sizes[size];
 
+    // Improved variants with better focus states for accessibility
+    const variantsConfig = {
+      outlined: `border ${
+        error
+          ? 'border-red-500 focus:ring-red-500/20 focus:ring-2'
+          : isFocused
+          ? 'border-oaxaca-pink ring-2 ring-oaxaca-pink/20'
+          : 'border-gray-300 dark:border-gray-600 focus:border-oaxaca-pink focus:ring-2 focus:ring-oaxaca-pink/20'
+      } bg-white dark:bg-gray-800 rounded-xl transition-all duration-200`,
+      filled: `border-0 ${
+        error
+          ? 'bg-red-50 dark:bg-red-900/20 ring-2 ring-red-500/20'
+          : 'bg-gray-100 dark:bg-gray-800 focus:ring-2 focus:ring-oaxaca-pink/20'
+      } rounded-xl transition-all duration-200`,
+      underlined: `border-0 border-b-2 rounded-none ${
+        error
+          ? 'border-red-500'
+          : isFocused
+          ? 'border-oaxaca-pink'
+          : 'border-gray-300 dark:border-gray-600 focus:border-oaxaca-pink'
+      } bg-transparent transition-all duration-200`,
+    };
+
     const handleClear = () => {
       onClear?.();
       triggerHaptic('light');
@@ -113,6 +137,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           {leftIcon && (
             <div
               className={`absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 ${sizeConfig.icon}`}
+              aria-hidden="true"
             >
               {leftIcon}
             </div>
@@ -125,11 +150,13 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             disabled={disabled}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
+            aria-invalid={error ? 'true' : undefined}
+            aria-describedby={error ? `${props.id || 'input'}-error` : undefined}
             className={`w-full px-4 ${leftIcon ? 'pl-10' : ''} ${
               rightIcon || showClearButton ? 'pr-10' : ''
-            } ${sizeConfig.input} ${variants[variant]} ${
+            } ${sizeConfig.input} ${variantsConfig[variant]} ${
               disabled ? 'opacity-50 cursor-not-allowed' : ''
-            } outline-none transition-all text-gray-900 dark:text-white placeholder-gray-400`}
+            } outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
             {...props}
           />
 
@@ -157,9 +184,11 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 
         {(error || hint) && (
           <p
+            id={error ? `${props.id || 'input'}-error` : undefined}
             className={`mt-1.5 text-sm ${
-              error ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'
+              error ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'
             }`}
+            role={error ? 'alert' : undefined}
           >
             {error || hint}
           </p>

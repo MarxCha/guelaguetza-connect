@@ -12,10 +12,11 @@ import {
   BookingQuerySchema,
   CreateExperienceReviewSchema,
 } from '../schemas/booking.schema.js';
+import { ConcurrencyError } from '../utils/errors.js';
 
 const bookingsRoutes: FastifyPluginAsync = async (fastify) => {
   const app = fastify.withTypeProvider<ZodTypeProvider>();
-  const bookingService = new BookingService(fastify.prisma);
+  const bookingService = new BookingService(fastify.prisma, fastify.cache, fastify.eventBus);
 
   // ============================================
   // EXPERIENCES (Public & Host)
@@ -196,11 +197,22 @@ const bookingsRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (request, reply) => {
-      const result = await bookingService.createBooking(
-        request.user.userId,
-        request.body
-      );
-      return reply.status(201).send(result);
+      try {
+        const result = await bookingService.createBooking(
+          request.user.userId,
+          request.body
+        );
+        return reply.status(201).send(result);
+      } catch (error) {
+        if (error instanceof ConcurrencyError) {
+          return reply.status(409).send({
+            error: 'ConcurrencyError',
+            message: error.message,
+            hint: 'El horario ha sido actualizado. Por favor, recarga los datos e intenta nuevamente.',
+          });
+        }
+        throw error;
+      }
     }
   );
 
@@ -228,9 +240,20 @@ const bookingsRoutes: FastifyPluginAsync = async (fastify) => {
         params: z.object({ id: z.string().cuid() }),
       },
     },
-    async (request) => {
-      const { id } = request.params;
-      return bookingService.cancelBooking(id, request.user.userId);
+    async (request, reply) => {
+      try {
+        const { id } = request.params;
+        return await bookingService.cancelBooking(id, request.user.userId);
+      } catch (error) {
+        if (error instanceof ConcurrencyError) {
+          return reply.status(409).send({
+            error: 'ConcurrencyError',
+            message: error.message,
+            hint: 'La reservación ha sido actualizada. Por favor, recarga los datos e intenta nuevamente.',
+          });
+        }
+        throw error;
+      }
     }
   );
 

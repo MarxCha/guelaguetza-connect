@@ -12,6 +12,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { ViewState } from '../../types';
+import ThemeToggle from './ThemeToggle';
 
 interface BreadcrumbItem {
   label: string;
@@ -85,33 +86,33 @@ const GlobalHeader: React.FC<GlobalHeaderProps> = ({
   return (
     <>
       <header className={`sticky top-0 z-30 ${getHeaderClasses()}`}>
-        <div className="px-4 py-3">
+        <div className="px-3 sm:px-4 py-2.5 sm:py-3 max-w-7xl mx-auto">
           <div className="flex items-center justify-between">
             {/* Left section */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
               {onBack && (
                 <button
                   onClick={onBack}
-                  className={`p-2 rounded-full transition ${getButtonClasses()}`}
+                  className={`p-2 rounded-full transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-oaxaca-pink ${getButtonClasses()}`}
                   aria-label="Volver"
                 >
-                  <ArrowLeft size={20} />
+                  <ArrowLeft size={18} className="sm:w-5 sm:h-5" />
                 </button>
               )}
               {showHomeButton && !onBack && onNavigate && (
                 <button
                   onClick={() => onNavigate(ViewState.HOME)}
-                  className={`p-2 rounded-full transition ${getButtonClasses()}`}
-                  aria-label="Inicio"
+                  className={`p-2 rounded-full transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center focus-visible:ring-2 focus-visible:ring-oaxaca-pink ${getButtonClasses()}`}
+                  aria-label="Ir al inicio"
                 >
-                  <Home size={20} />
+                  <Home size={18} className="sm:w-5 sm:h-5" />
                 </button>
               )}
-              {icon && <div className="ml-1">{icon}</div>}
-              <div className="ml-1">
-                <h1 className="font-bold text-lg leading-tight">{title}</h1>
+              {icon && <div className="ml-1 flex-shrink-0" aria-hidden="true">{icon}</div>}
+              <div className="ml-1 min-w-0">
+                <h1 className="font-bold text-base sm:text-lg leading-tight truncate">{title}</h1>
                 {subtitle && (
-                  <p className={`text-xs ${variant === 'gradient' ? 'text-white/70' : 'text-gray-500 dark:text-gray-400'}`}>
+                  <p className={`text-[10px] sm:text-xs truncate ${variant === 'gradient' ? 'text-white/70' : 'text-gray-500 dark:text-gray-400'}`}>
                     {subtitle}
                   </p>
                 )}
@@ -119,33 +120,35 @@ const GlobalHeader: React.FC<GlobalHeaderProps> = ({
             </div>
 
             {/* Right section */}
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
               {showSearch && onNavigate && (
                 <button
                   onClick={() => onNavigate(ViewState.SEARCH)}
-                  className={`p-2 rounded-full transition ${getButtonClasses()}`}
+                  className={`p-2 rounded-full transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center focus-visible:ring-2 focus-visible:ring-oaxaca-pink ${getButtonClasses()}`}
                   aria-label="Buscar"
                 >
-                  <Search size={20} />
+                  <Search size={18} className="sm:w-5 sm:h-5" />
                 </button>
               )}
               {showNotifications && (
                 <button
-                  className={`p-2 rounded-full transition relative ${getButtonClasses()}`}
-                  aria-label="Notificaciones"
+                  className={`p-2 rounded-full transition-colors relative min-w-[44px] min-h-[44px] flex items-center justify-center focus-visible:ring-2 focus-visible:ring-oaxaca-pink ${getButtonClasses()}`}
+                  aria-label="Notificaciones - tienes notificaciones nuevas"
                 >
-                  <Bell size={20} />
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                  <Bell size={18} className="sm:w-5 sm:h-5" />
+                  <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full" aria-hidden="true" />
                 </button>
               )}
               {actions}
               {showMenu && (
                 <button
                   onClick={() => setMenuOpen(!menuOpen)}
-                  className={`p-2 rounded-full transition ${getButtonClasses()}`}
-                  aria-label="Menu"
+                  className={`p-2 rounded-full transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center focus-visible:ring-2 focus-visible:ring-oaxaca-pink ${getButtonClasses()}`}
+                  aria-label={menuOpen ? 'Cerrar menu' : 'Abrir menu'}
+                  aria-expanded={menuOpen}
+                  aria-controls="navigation-menu"
                 >
-                  {menuOpen ? <X size={20} /> : <Menu size={20} />}
+                  {menuOpen ? <X size={18} className="sm:w-5 sm:h-5" /> : <Menu size={18} className="sm:w-5 sm:h-5" />}
                 </button>
               )}
             </div>
@@ -186,23 +189,32 @@ const GlobalHeader: React.FC<GlobalHeaderProps> = ({
 
       {/* Quick navigation menu */}
       {menuOpen && (
-        <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setMenuOpen(false)}>
-          <div
-            className="absolute right-0 top-0 h-full w-72 bg-white dark:bg-gray-800 shadow-xl"
+        <div
+          className="fixed inset-0 z-40 bg-black/50"
+          onClick={() => setMenuOpen(false)}
+          aria-hidden="true"
+        >
+          <nav
+            id="navigation-menu"
+            className="absolute right-0 top-0 h-full w-64 sm:w-72 bg-white dark:bg-gray-800 shadow-xl"
             onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menu de navegacion"
           >
-            <div className="p-4 border-b dark:border-gray-700">
+            <div className="p-3 sm:p-4 border-b dark:border-gray-700">
               <div className="flex items-center justify-between">
-                <h2 className="font-bold text-gray-900 dark:text-white">Menu</h2>
+                <h2 className="font-bold text-gray-900 dark:text-white text-base sm:text-lg">Menu</h2>
                 <button
                   onClick={() => setMenuOpen(false)}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full min-w-[44px] min-h-[44px] flex items-center justify-center transition-colors focus-visible:ring-2 focus-visible:ring-oaxaca-pink"
+                  aria-label="Cerrar menu"
                 >
-                  <X size={20} className="text-gray-600 dark:text-gray-300" />
+                  <X size={18} className="sm:w-5 sm:h-5 text-gray-600 dark:text-gray-300" />
                 </button>
               </div>
             </div>
-            <nav className="p-2">
+            <div className="p-2">
               {quickLinks.map((link) => (
                 <button
                   key={link.label}
@@ -210,14 +222,22 @@ const GlobalHeader: React.FC<GlobalHeaderProps> = ({
                     onNavigate?.(link.view);
                     setMenuOpen(false);
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
+                  className="w-full flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3 text-left hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors min-h-[48px] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-oaxaca-pink"
                 >
-                  <link.icon size={20} className="text-gray-500 dark:text-gray-400" />
-                  <span className="text-gray-700 dark:text-gray-200">{link.label}</span>
+                  <link.icon size={18} className="sm:w-5 sm:h-5 text-gray-500 dark:text-gray-400 flex-shrink-0" aria-hidden="true" />
+                  <span className="text-gray-700 dark:text-gray-200 text-sm sm:text-base">{link.label}</span>
                 </button>
               ))}
-            </nav>
-          </div>
+
+              {/* Theme Toggle in Menu */}
+              <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-700 px-3 sm:px-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Tema</span>
+                  <ThemeToggle variant="dropdown" size="sm" />
+                </div>
+              </div>
+            </div>
+          </nav>
         </div>
       )}
     </>

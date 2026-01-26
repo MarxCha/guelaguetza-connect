@@ -1,5 +1,6 @@
 import { PrismaClient, EventCategory, Event as PrismaEvent } from '@prisma/client';
 import { NotificationService } from './notification.service.js';
+import { CacheService } from './cache.service.js';
 
 interface EventsInput {
   category?: EventCategory;
@@ -32,9 +33,17 @@ interface EventDetailResponse extends EventResponse {
 }
 
 export class EventService {
+  // Cache TTLs (in seconds)
+  private readonly CACHE_TTL = {
+    UPCOMING_EVENTS: 600, // 10 minutos - eventos próximos
+    EVENT_DETAIL: 300, // 5 minutos - detalle de evento
+    USER_RSVPS: 120, // 2 minutos - RSVPs del usuario
+  };
+
   constructor(
     private prisma: PrismaClient,
-    private notificationService?: NotificationService
+    private notificationService?: NotificationService,
+    private cache?: CacheService
   ) {}
 
   // Get events with filters
@@ -44,6 +53,15 @@ export class EventService {
   ): Promise<{ events: EventResponse[]; hasMore: boolean; total: number }> {
     const { category, startDate, endDate, page, limit } = input;
     const skip = (page - 1) * limit;
+
+    // Cache key based on query params (without userId for shared cache)
+    const cacheKey = `events:list:cat:${category || 'all'}:start:${startDate?.toISOString() || 'none'}:end:${endDate?.toISOString() || 'none'}:page:${page}:limit:${limit}`;
+
+    // Try cache only if no userId (public data)
+    if (!userId && this.cache) {
+      const cached = await this.cache.get<{ events: EventResponse[]; hasMore: boolean; total: number }>(cacheKey);
+      if (cached) return cached;
+    }
 
     const where: Record<string, unknown> = {};
 
@@ -89,7 +107,7 @@ export class EventService {
     const hasMore = events.length > limit;
     const eventsResult = hasMore ? events.slice(0, limit) : events;
 
-    return {
+    const result = {
       events: eventsResult.map((e) => ({
         id: e.id,
         title: e.title,
@@ -109,10 +127,24 @@ export class EventService {
       hasMore,
       total,
     };
+
+    // Cache only if no userId (public data)
+    if (!userId && this.cache) {
+      await this.cache.set(cacheKey, result, this.CACHE_TTL.UPCOMING_EVENTS);
+    }
+
+    return result;
   }
 
   // Get single event
   async getEvent(eventId: string, userId?: string): Promise<EventDetailResponse | null> {
+    // Try cache only if no userId (public data)
+    const cacheKey = `event:${eventId}:detail`;
+    if (!userId && this.cache) {
+      const cached = await this.cache.get<EventDetailResponse>(cacheKey);
+      if (cached) return cached;
+    }
+
     const event = await this.prisma.event.findUnique({
       where: { id: eventId },
       include: {
@@ -136,7 +168,7 @@ export class EventService {
 
     if (!event) return null;
 
-    return {
+    const result = {
       id: event.id,
       title: event.title,
       description: event.description,
@@ -154,6 +186,13 @@ export class EventService {
       createdAt: event.createdAt,
       updatedAt: event.updatedAt,
     };
+
+    // Cache only if no userId (public data)
+    if (!userId && this.cache) {
+      await this.cache.set(cacheKey, result, this.CACHE_TTL.EVENT_DETAIL);
+    }
+
+    return result;
   }
 
   // Create RSVP
@@ -171,6 +210,15 @@ export class EventService {
     await this.prisma.eventRSVP.create({
       data: { userId, eventId },
     });
+
+    // Invalidate cache
+    if (this.cache) {
+      await Promise.all([
+        this.cache.del(`event:${eventId}:detail`),
+        this.cache.invalidate(`events:list:*`), // Invalidar listas de eventos
+        this.cache.del(`user:${userId}:rsvps`),
+      ]);
+    }
   }
 
   // Delete RSVP
@@ -178,6 +226,15 @@ export class EventService {
     await this.prisma.eventRSVP.deleteMany({
       where: { userId, eventId },
     });
+
+    // Invalidate cache
+    if (this.cache) {
+      await Promise.all([
+        this.cache.del(`event:${eventId}:detail`),
+        this.cache.invalidate(`events:list:*`),
+        this.cache.del(`user:${userId}:rsvps`),
+      ]);
+    }
   }
 
   // Create reminder

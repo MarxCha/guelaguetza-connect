@@ -1,0 +1,150 @@
+# Alertmanager Configuration for Guelaguetza Connect
+#
+# This configuration defines how alerts are routed and notified.
+# Customize the receivers with your actual notification endpoints.
+
+global:
+  # The smarthost and SMTP sender used for mail notifications
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_from: 'alertmanager@guelaguetza.com'
+  smtp_auth_username: '${SMTP_USERNAME}'
+  smtp_auth_password: '${SMTP_PASSWORD}'
+
+  # Slack API URL (if using Slack)
+  slack_api_url: '${SLACK_WEBHOOK_URL}'
+
+  # The default time to wait before sending a notification again
+  resolve_timeout: 5m
+
+# Route tree
+route:
+  # Default receiver
+  receiver: 'default-receiver'
+
+  # Group alerts by these labels
+  group_by: ['alertname', 'severity', 'team']
+
+  # Wait time before sending the first notification for a group
+  group_wait: 30s
+
+  # Wait time before sending notifications for new alerts in an existing group
+  group_interval: 5m
+
+  # Wait time before sending a notification again for a resolved alert
+  repeat_interval: 4h
+
+  # Child routes for specific routing
+  routes:
+    # Critical alerts go to PagerDuty/OpsGenie and Slack
+    - match:
+        severity: critical
+      receiver: 'critical-alerts'
+      group_wait: 10s
+      repeat_interval: 1h
+
+    # Warning alerts go to Slack
+    - match:
+        severity: warning
+      receiver: 'warning-alerts'
+      group_wait: 1m
+      repeat_interval: 4h
+
+    # Info/business alerts go to email
+    - match:
+        severity: info
+      receiver: 'info-alerts'
+      group_wait: 5m
+      repeat_interval: 12h
+
+    # Security alerts have special routing
+    - match:
+        team: security
+      receiver: 'security-alerts'
+      group_wait: 10s
+      repeat_interval: 30m
+
+# Inhibition rules
+inhibit_rules:
+  # If API is down, inhibit all other API-related alerts
+  - source_match:
+      alertname: 'APIDown'
+    target_match_re:
+      alertname: '.+'
+    equal: ['job']
+
+  # If there's a critical alert, inhibit warnings for the same alertname
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname']
+
+# Receivers
+receivers:
+  # Default receiver - sends to Slack
+  - name: 'default-receiver'
+    slack_configs:
+      - channel: '#guelaguetza-alerts'
+        send_resolved: true
+        title: '{{ template "slack.default.title" . }}'
+        text: '{{ template "slack.default.text" . }}'
+        color: '{{ if eq .Status "firing" }}{{ if eq .CommonLabels.severity "critical" }}danger{{ else }}warning{{ end }}{{ else }}good{{ end }}'
+
+  # Critical alerts - PagerDuty + Slack
+  - name: 'critical-alerts'
+    slack_configs:
+      - channel: '#guelaguetza-critical'
+        send_resolved: true
+        title: '[CRITICAL] {{ .CommonLabels.alertname }}'
+        text: |
+          *Alert:* {{ .CommonLabels.alertname }}
+          *Severity:* {{ .CommonLabels.severity }}
+          *Team:* {{ .CommonLabels.team }}
+          *Description:* {{ .CommonAnnotations.description }}
+          *Runbook:* {{ .CommonAnnotations.runbook_url }}
+        color: 'danger'
+    # Uncomment and configure for PagerDuty
+    # pagerduty_configs:
+    #   - service_key: '${PAGERDUTY_SERVICE_KEY}'
+    #     send_resolved: true
+
+  # Warning alerts - Slack only
+  - name: 'warning-alerts'
+    slack_configs:
+      - channel: '#guelaguetza-alerts'
+        send_resolved: true
+        title: '[WARNING] {{ .CommonLabels.alertname }}'
+        text: |
+          *Alert:* {{ .CommonLabels.alertname }}
+          *Severity:* {{ .CommonLabels.severity }}
+          *Description:* {{ .CommonAnnotations.description }}
+        color: 'warning'
+
+  # Info alerts - Email
+  - name: 'info-alerts'
+    email_configs:
+      - to: 'team@guelaguetza.com'
+        send_resolved: true
+        headers:
+          Subject: '[INFO] {{ .CommonLabels.alertname }}'
+
+  # Security alerts - Immediate notification
+  - name: 'security-alerts'
+    slack_configs:
+      - channel: '#guelaguetza-security'
+        send_resolved: true
+        title: '[SECURITY] {{ .CommonLabels.alertname }}'
+        text: |
+          *Alert:* {{ .CommonLabels.alertname }}
+          *Description:* {{ .CommonAnnotations.description }}
+          *Runbook:* {{ .CommonAnnotations.runbook_url }}
+        color: 'danger'
+    email_configs:
+      - to: 'security@guelaguetza.com'
+        send_resolved: true
+        headers:
+          Subject: '[SECURITY ALERT] {{ .CommonLabels.alertname }}'
+
+# Templates for notifications
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'

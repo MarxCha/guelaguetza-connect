@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { User, Mail, MapPin, LogOut, Camera, Scan, ChevronRight, Settings, Bell, Shield, Heart, HelpCircle, Trophy, Award, Loader2, MessageSquare, BarChart3, Users, ShieldCheck } from 'lucide-react';
+import { User, Mail, MapPin, LogOut, Camera, Scan, ChevronRight, Settings, Bell, Shield, Heart, HelpCircle, Trophy, Award, Loader2, MessageSquare, BarChart3, Users, ShieldCheck, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { ViewState } from '../types';
 import { getMyStats, checkIn, UserStats } from '../services/gamification';
 import XPProgress from './ui/XPProgress';
+import { ThemeSegmentControl } from './ui/ThemeToggle';
 
 interface ProfileViewProps {
   setView: (view: ViewState) => void;
@@ -11,6 +13,7 @@ interface ProfileViewProps {
 
 const ProfileView: React.FC<ProfileViewProps> = ({ setView }) => {
   const { user, logout, isAuthenticated, token } = useAuth();
+  const { isDark } = useTheme();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
@@ -193,6 +196,23 @@ const ProfileView: React.FC<ProfileViewProps> = ({ setView }) => {
 
       {/* Menu Options */}
       <div className="px-4 mt-6 space-y-3">
+        {/* Theme Section */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden">
+          <p className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase">Apariencia</p>
+
+          <div className="w-full px-4 py-3 flex items-center gap-3">
+            <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-full">
+              {isDark ? (
+                <Moon size={18} className="text-blue-500 dark:text-blue-400" />
+              ) : (
+                <Sun size={18} className="text-amber-600" />
+              )}
+            </div>
+            <span className="flex-1 text-left text-gray-900 dark:text-gray-100">Tema</span>
+            <ThemeSegmentControl />
+          </div>
+        </div>
+
         {/* Account Section */}
         <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden">
           <p className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase">Cuenta</p>
@@ -201,7 +221,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ setView }) => {
             <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-full">
               <Settings size={18} className="text-blue-600 dark:text-blue-400" />
             </div>
-            <span className="flex-1 text-left text-gray-900 dark:text-gray-100">Configuración</span>
+            <span className="flex-1 text-left text-gray-900 dark:text-gray-100">Configuracion</span>
             <ChevronRight size={18} className="text-gray-400" />
           </button>
 

@@ -1,0 +1,254 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  e2e-tests:
+    name: Run E2E Tests
+    runs-on: ubuntu-latest
+
+    # Servicio de PostgreSQL para tests
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: guelaguetza_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create .env.test file
+        run: |
+          cat > .env.test << EOF
+          DATABASE_URL="postgresql://postgres:postgres@localhost:5433/guelaguetza_test"
+          JWT_SECRET="test-secret-for-ci"
+          PORT=3002
+          HOST="0.0.0.0"
+          NODE_ENV="test"
+          DISABLE_PUSH_NOTIFICATIONS=true
+          DISABLE_EMAILS=true
+          EOF
+
+      - name: Generate Prisma Client
+        run: |
+          cd backend
+          npx prisma generate
+
+      - name: Run database migrations
+        run: |
+          cd backend
+          DATABASE_URL="postgresql://postgres:postgres@localhost:5433/guelaguetza_test" npx prisma migrate deploy
+
+      - name: Run E2E tests
+        run: pnpm test:e2e
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5433/guelaguetza_test
+          JWT_SECRET: test-secret-for-ci
+          NODE_ENV: test
+
+      - name: Generate coverage report
+        if: always()
+        run: pnpm test:e2e:coverage
+
+      - name: Upload coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/e2e/lcov.info
+          flags: e2e
+          name: e2e-coverage
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: e2e-test-results
+          path: |
+            coverage/e2e/
+            test-results/
+
+      - name: Comment PR with coverage
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const coverage = JSON.parse(fs.readFileSync('coverage/e2e/coverage-summary.json', 'utf8'));
+            const total = coverage.total;
+
+            const comment = `## E2E Test Coverage Report
+
+            | Metric | Coverage |
+            |--------|----------|
+            | Statements | ${total.statements.pct}% |
+            | Branches | ${total.branches.pct}% |
+            | Functions | ${total.functions.pct}% |
+            | Lines | ${total.lines.pct}% |
+
+            Full report available in artifacts.
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  # Job separado para verificar setup
+  verify-setup:
+    name: Verify E2E Setup
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: guelaguetza_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create .env.test file
+        run: cp .env.test.example .env.test
+
+      - name: Generate Prisma Client
+        run: |
+          cd backend
+          npx prisma generate
+
+      - name: Run database migrations
+        run: |
+          cd backend
+          DATABASE_URL="postgresql://postgres:postgres@localhost:5433/guelaguetza_test" npx prisma migrate deploy
+
+      - name: Run health checks only
+        run: pnpm test:e2e health
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5433/guelaguetza_test
+          JWT_SECRET: test-secret-for-ci
+
+  # Job para ejecutar tests en paralelo (opcional)
+  e2e-parallel:
+    name: E2E Tests (Parallel)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    strategy:
+      matrix:
+        suite: [health, booking, marketplace, admin]
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: guelaguetza_test_${{ matrix.suite }}
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create .env.test file
+        run: cp .env.test.example .env.test
+
+      - name: Generate Prisma Client
+        run: |
+          cd backend
+          npx prisma generate
+
+      - name: Run database migrations
+        run: |
+          cd backend
+          DATABASE_URL="postgresql://postgres:postgres@localhost:5433/guelaguetza_test_${{ matrix.suite }}" npx prisma migrate deploy
+
+      - name: Run E2E tests for ${{ matrix.suite }}
+        run: pnpm test:e2e ${{ matrix.suite }}
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5433/guelaguetza_test_${{ matrix.suite }}
+          JWT_SECRET: test-secret-for-ci

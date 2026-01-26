@@ -10,10 +10,36 @@ import {
   CreateExperienceReviewInput,
 } from '../schemas/booking.schema.js';
 import { stripeService } from './stripe.service.js';
-import { AppError, NotFoundError } from '../utils/errors.js';
+import { AppError, NotFoundError, ConcurrencyError } from '../utils/errors.js';
+import {
+  updateTimeSlotWithLocking,
+  getTimeSlotWithVersion,
+  withRetry,
+} from '../utils/optimistic-locking.js';
+import { CacheService } from './cache.service.js';
+import {
+  bookingsCreatedTotal,
+  bookingsCancelledTotal,
+  bookingCreationDuration,
+  concurrencyConflictsTotal,
+  startTimer,
+} from '../utils/metrics.js';
+import { EventBus, createEvent, EventTypes } from '../infrastructure/events/index.js';
 
 export class BookingService {
-  constructor(private prisma: PrismaClient) {}
+  // Cache TTLs (in seconds)
+  private readonly CACHE_TTL = {
+    EXPERIENCE_DETAIL: 120, // 2 minutos - detalle de experiencia
+    EXPERIENCE_LIST: 300, // 5 minutos - listado de experiencias
+    TIME_SLOTS: 60, // 1 minuto - slots disponibles (cambian frecuentemente)
+    USER_BOOKINGS: 60, // 1 minuto - reservaciones del usuario
+  };
+
+  constructor(
+    private prisma: PrismaClient,
+    private cache?: CacheService,
+    private eventBus?: EventBus
+  ) {}
 
   // ============================================
   // EXPERIENCES
@@ -83,6 +109,13 @@ export class BookingService {
   }
 
   async getExperienceById(id: string) {
+    // Try cache first
+    const cacheKey = `experience:${id}:detail`;
+    if (this.cache) {
+      const cached = await this.cache.get(cacheKey);
+      if (cached) return cached;
+    }
+
     const experience = await this.prisma.experience.findUnique({
       where: { id },
       include: {
@@ -118,6 +151,11 @@ export class BookingService {
 
     if (!experience) {
       throw new NotFoundError('Experiencia no encontrada');
+    }
+
+    // Cache the result
+    if (this.cache) {
+      await this.cache.set(cacheKey, experience, this.CACHE_TTL.EXPERIENCE_DETAIL);
     }
 
     return experience;
@@ -156,13 +194,23 @@ export class BookingService {
       throw new AppError('No tienes permiso para editar esta experiencia', 403);
     }
 
-    return this.prisma.experience.update({
+    const updated = await this.prisma.experience.update({
       where: { id },
       data: {
         ...data,
         ...(data.price && { price: new Prisma.Decimal(data.price) }),
       },
     });
+
+    // Invalidate cache
+    if (this.cache) {
+      await Promise.all([
+        this.cache.del(`experience:${id}:detail`),
+        this.cache.invalidate(`experiences:*`),
+      ]);
+    }
+
+    return updated;
   }
 
   async deleteExperience(id: string, hostId: string) {
@@ -192,6 +240,13 @@ export class BookingService {
   // ============================================
 
   async getTimeSlots(experienceId: string, query: TimeSlotQuery) {
+    // Cache key includes dates for specificity
+    const cacheKey = `experience:${experienceId}:slots:${query.startDate}:${query.endDate || query.startDate}`;
+    if (this.cache) {
+      const cached = await this.cache.get(cacheKey);
+      if (cached) return cached;
+    }
+
     const experience = await this.prisma.experience.findUnique({
       where: { id: experienceId },
     });
@@ -215,10 +270,17 @@ export class BookingService {
       orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
     });
 
-    return slots.map((slot) => ({
+    const result = slots.map((slot) => ({
       ...slot,
       availableSpots: slot.capacity - slot.bookedCount,
     }));
+
+    // Cache with shorter TTL as availability changes frequently
+    if (this.cache) {
+      await this.cache.set(cacheKey, result, this.CACHE_TTL.TIME_SLOTS);
+    }
+
+    return result;
   }
 
   async createTimeSlots(experienceId: string, hostId: string, slots: CreateTimeSlotInput[]) {
@@ -364,87 +426,218 @@ export class BookingService {
   async createBooking(userId: string, data: CreateBookingInput) {
     const { experienceId, timeSlotId, guestCount, specialRequests } = data;
 
-    // Get experience and slot in parallel
-    const [experience, timeSlot] = await Promise.all([
-      this.prisma.experience.findUnique({ where: { id: experienceId } }),
-      this.prisma.experienceTimeSlot.findUnique({ where: { id: timeSlotId } }),
-    ]);
+    // Start timing for metrics
+    const endTimer = startTimer(bookingCreationDuration);
 
-    if (!experience) {
-      throw new NotFoundError('Experiencia no encontrada');
-    }
+    try {
+      // Ejecutar la operación con retry automático en caso de conflicto
+      const result = await withRetry(
+      async () => {
+        // FASE 1: Validación y reserva de inventario en BD
+        // ================================================
 
-    if (!timeSlot) {
-      throw new NotFoundError('Horario no encontrado');
-    }
+        // Get experience and slot in parallel
+        const [experience, timeSlot] = await Promise.all([
+          this.prisma.experience.findUnique({ where: { id: experienceId } }),
+          this.prisma.experienceTimeSlot.findUnique({ where: { id: timeSlotId } }),
+        ]);
 
-    if (timeSlot.experienceId !== experienceId) {
-      throw new AppError('El horario no corresponde a esta experiencia', 400);
-    }
+        if (!experience) {
+          throw new NotFoundError('Experiencia no encontrada');
+        }
 
-    if (!timeSlot.isAvailable) {
-      throw new AppError('Este horario ya no está disponible', 400);
-    }
+        if (!timeSlot) {
+          throw new NotFoundError('Horario no encontrado');
+        }
 
-    const availableSpots = timeSlot.capacity - timeSlot.bookedCount;
-    if (guestCount > availableSpots) {
-      throw new AppError(`Solo hay ${availableSpots} lugares disponibles`, 400);
-    }
+        if (timeSlot.experienceId !== experienceId) {
+          throw new AppError('El horario no corresponde a esta experiencia', 400);
+        }
 
-    // Calculate total price
-    const totalPrice = Number(experience.price) * guestCount;
+        if (!timeSlot.isAvailable) {
+          throw new AppError('Este horario ya no está disponible', 400);
+        }
 
-    // Create payment intent
-    const payment = await stripeService.createPaymentIntent({
-      amount: Math.round(totalPrice * 100), // Convert to cents
-      description: `Reservación: ${experience.title}`,
-      metadata: {
-        experienceId,
-        timeSlotId,
-        userId,
-        guestCount: String(guestCount),
+        const availableSpots = timeSlot.capacity - timeSlot.bookedCount;
+        if (guestCount > availableSpots) {
+          throw new AppError(`Solo hay ${availableSpots} lugares disponibles`, 400);
+        }
+
+        // Guardar la versión actual para el locking optimista
+        const currentVersion = timeSlot.version;
+
+        // Calculate total price
+        const totalPrice = Number(experience.price) * guestCount;
+
+        // Create booking in PENDING_PAYMENT status and update slot count in transaction
+        let booking;
+
+        try {
+          booking = await this.prisma.$transaction(async (tx) => {
+            // Update slot booked count with optimistic locking
+            await updateTimeSlotWithLocking(
+              tx,
+              timeSlotId,
+              currentVersion,
+              {
+                bookedCount: { increment: guestCount },
+                isAvailable: timeSlot.bookedCount + guestCount < timeSlot.capacity,
+              }
+            );
+
+            // Create booking in PENDING_PAYMENT status
+            return tx.booking.create({
+              data: {
+                userId,
+                experienceId,
+                timeSlotId,
+                guestCount,
+                totalPrice: new Prisma.Decimal(totalPrice),
+                specialRequests,
+                status: 'PENDING_PAYMENT',
+              },
+              include: {
+                experience: true,
+                timeSlot: true,
+              },
+            });
+          });
+        } catch (error) {
+          // Manejar el error de unique constraint (doble reserva)
+          if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P2002') {
+              throw new AppError(
+                'Ya tienes una reservación activa para este horario',
+                409
+              );
+            }
+          }
+          // Re-lanzar cualquier otro error
+          throw error;
+        }
+
+        // FASE 2: Crear payment intent en Stripe (FUERA de la transacción)
+        // =================================================================
+        let clientSecret: string | undefined;
+
+        try {
+          const payment = await stripeService.createPaymentIntent({
+            amount: Math.round(totalPrice * 100), // Convert to cents
+            description: `Reservación: ${experience.title}`,
+            metadata: {
+              bookingId: booking.id,
+              experienceId,
+              timeSlotId,
+              userId,
+              guestCount: String(guestCount),
+            },
+          });
+
+          clientSecret = payment?.clientSecret;
+
+          // FASE 3: Actualizar booking con el payment intent ID
+          // ====================================================
+          if (payment?.paymentIntentId) {
+            await this.prisma.booking.update({
+              where: { id: booking.id },
+              data: {
+                stripePaymentId: payment.paymentIntentId,
+                status: 'PENDING', // Ready for payment
+              },
+            });
+          }
+        } catch (stripeError) {
+          // Si Stripe falla, marcar booking como PAYMENT_FAILED
+          // No restauramos el slot aquí - el usuario puede reintentar
+          await this.prisma.booking.update({
+            where: { id: booking.id },
+            data: { status: 'PAYMENT_FAILED' },
+          });
+
+          throw new AppError(
+            'Error al procesar el pago. Por favor intenta nuevamente.',
+            500,
+            stripeError instanceof Error ? stripeError.message : undefined
+          );
+        }
+
+        // Invalidate cache after successful booking
+        if (this.cache) {
+          await Promise.all([
+            this.cache.del(`experience:${experienceId}:detail`),
+            this.cache.invalidate(`experience:${experienceId}:slots:*`),
+            this.cache.invalidate(`experiences:*`),
+          ]);
+        }
+
+        // Emit booking.created event (fire-and-forget)
+        if (this.eventBus) {
+          const host = await this.prisma.user.findUnique({
+            where: { id: experience.hostId },
+            select: { id: true, nombre: true, apellido: true },
+          });
+
+          const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            select: { nombre: true, apellido: true },
+          });
+
+          this.eventBus.emitAsync(
+            createEvent(EventTypes.BOOKING_CREATED, {
+              bookingId: booking.id,
+              userId,
+              userName: user ? `${user.nombre} ${user.apellido || ''}`.trim() : undefined,
+              experienceId,
+              experienceTitle: experience.title,
+              hostId: experience.hostId,
+              hostName: host ? `${host.nombre} ${host.apellido || ''}`.trim() : 'Host',
+              guestCount,
+              totalPrice,
+              timeSlot: {
+                date: timeSlot.date.toISOString().split('T')[0],
+                startTime: timeSlot.startTime,
+                endTime: timeSlot.endTime,
+              },
+            })
+          );
+        }
+
+        return {
+          booking,
+          clientSecret,
+        };
       },
-    });
+      { maxRetries: 3, retryDelay: 100 }
+    );
 
-    // Create booking and update slot count in transaction
-    const booking = await this.prisma.$transaction(async (tx) => {
-      // Update slot booked count
-      await tx.experienceTimeSlot.update({
-        where: { id: timeSlotId },
-        data: {
-          bookedCount: { increment: guestCount },
-          isAvailable: timeSlot.bookedCount + guestCount < timeSlot.capacity,
-        },
-      });
+      // Record success metrics
+      bookingsCreatedTotal.inc({ status: 'pending' });
+      endTimer();
 
-      // Create booking
-      return tx.booking.create({
-        data: {
-          userId,
-          experienceId,
-          timeSlotId,
-          guestCount,
-          totalPrice: new Prisma.Decimal(totalPrice),
-          specialRequests,
-          stripePaymentId: payment?.paymentIntentId,
-        },
-        include: {
-          experience: true,
-          timeSlot: true,
-        },
-      });
-    });
-
-    return {
-      booking,
-      clientSecret: payment?.clientSecret,
-    };
+      return result;
+    } catch (error) {
+      // Record failure metrics
+      if (error instanceof ConcurrencyError) {
+        concurrencyConflictsTotal.inc({ resource_type: 'time_slot' });
+        bookingsCreatedTotal.inc({ status: 'conflict' });
+      } else {
+        bookingsCreatedTotal.inc({ status: 'failed' });
+      }
+      endTimer();
+      throw error;
+    }
   }
 
   async confirmBooking(id: string, userId: string) {
     const booking = await this.prisma.booking.findUnique({
       where: { id },
-      include: { experience: true },
+      include: {
+        experience: true,
+        timeSlot: true,
+        user: {
+          select: { id: true, nombre: true, apellido: true },
+        },
+      },
     });
 
     if (!booking) {
@@ -455,7 +648,7 @@ export class BookingService {
       throw new AppError('No tienes permiso para confirmar esta reservación', 403);
     }
 
-    if (booking.status !== 'PENDING') {
+    if (!['PENDING', 'PENDING_PAYMENT'].includes(booking.status)) {
       throw new AppError('Esta reservación ya fue procesada', 400);
     }
 
@@ -467,7 +660,7 @@ export class BookingService {
       }
     }
 
-    return this.prisma.booking.update({
+    const updated = await this.prisma.booking.update({
       where: { id },
       data: {
         status: 'CONFIRMED',
@@ -478,67 +671,140 @@ export class BookingService {
         timeSlot: true,
       },
     });
+
+    // Emit booking.confirmed event (fire-and-forget)
+    if (this.eventBus && booking.user) {
+      this.eventBus.emitAsync(
+        createEvent(EventTypes.BOOKING_CONFIRMED, {
+          bookingId: id,
+          userId,
+          userName: `${booking.user.nombre} ${booking.user.apellido || ''}`.trim(),
+          experienceId: booking.experienceId,
+          experienceTitle: booking.experience.title,
+          hostId: booking.experience.hostId,
+          guestCount: booking.guestCount,
+          totalPrice: Number(booking.totalPrice),
+          timeSlot: {
+            date: booking.timeSlot.date.toISOString().split('T')[0],
+            startTime: booking.timeSlot.startTime,
+          },
+        })
+      );
+    }
+
+    return updated;
   }
 
   async cancelBooking(id: string, userId: string) {
-    const booking = await this.prisma.booking.findUnique({
-      where: { id },
-      include: { experience: true, timeSlot: true },
-    });
+    // Ejecutar la operación con retry automático en caso de conflicto
+    return withRetry(
+      async () => {
+        const booking = await this.prisma.booking.findUnique({
+          where: { id },
+          include: { experience: true, timeSlot: true },
+        });
 
-    if (!booking) {
-      throw new NotFoundError('Reservación no encontrada');
-    }
+        if (!booking) {
+          throw new NotFoundError('Reservación no encontrada');
+        }
 
-    // User or host can cancel
-    if (booking.userId !== userId && booking.experience.hostId !== userId) {
-      throw new AppError('No tienes permiso para cancelar esta reservación', 403);
-    }
+        // User or host can cancel
+        if (booking.userId !== userId && booking.experience.hostId !== userId) {
+          throw new AppError('No tienes permiso para cancelar esta reservación', 403);
+        }
 
-    if (booking.status === 'CANCELLED') {
-      throw new AppError('Esta reservación ya fue cancelada', 400);
-    }
+        if (booking.status === 'CANCELLED') {
+          throw new AppError('Esta reservación ya fue cancelada', 400);
+        }
 
-    if (booking.status === 'COMPLETED') {
-      throw new AppError('No puedes cancelar una reservación completada', 400);
-    }
+        if (booking.status === 'COMPLETED') {
+          throw new AppError('No puedes cancelar una reservación completada', 400);
+        }
 
-    // Refund payment if confirmed
-    if (booking.status === 'CONFIRMED' && booking.stripePaymentId) {
-      await stripeService.createRefund(booking.stripePaymentId);
-    }
+        // Guardar la versión actual para el locking optimista
+        const currentVersion = booking.timeSlot.version;
 
-    // Cancel and restore slot capacity in transaction
-    return this.prisma.$transaction(async (tx) => {
-      // Restore slot capacity
-      await tx.experienceTimeSlot.update({
-        where: { id: booking.timeSlotId },
-        data: {
-          bookedCount: { decrement: booking.guestCount },
-          isAvailable: true,
-        },
-      });
+        // FASE 1: Procesar reembolso en Stripe ANTES de actualizar BD
+        // ============================================================
+        if (booking.status === 'CONFIRMED' && booking.stripePaymentId) {
+          try {
+            await stripeService.createRefund(booking.stripePaymentId);
+          } catch (refundError) {
+            // Si el reembolso falla, no cancelamos la reservación
+            throw new AppError(
+              'Error al procesar el reembolso. Por favor contacta soporte.',
+              500,
+              refundError instanceof Error ? refundError.message : undefined
+            );
+          }
+        }
 
-      // Update booking status
-      return tx.booking.update({
-        where: { id },
-        data: {
-          status: 'CANCELLED',
-          cancelledAt: new Date(),
-        },
-        include: {
-          experience: true,
-          timeSlot: true,
-        },
-      });
-    });
+        // FASE 2: Cancelar y restaurar capacidad en transacción
+        // ======================================================
+        const result = await this.prisma.$transaction(async (tx) => {
+          // Restore slot capacity with optimistic locking
+          await updateTimeSlotWithLocking(tx, booking.timeSlotId, currentVersion, {
+            bookedCount: { decrement: booking.guestCount },
+            isAvailable: true,
+          });
+
+          // Update booking status
+          return tx.booking.update({
+            where: { id },
+            data: {
+              status: 'CANCELLED',
+              cancelledAt: new Date(),
+            },
+            include: {
+              experience: true,
+              timeSlot: true,
+            },
+          });
+        });
+
+        // Invalidate cache after cancellation
+        if (this.cache) {
+          await Promise.all([
+            this.cache.del(`experience:${booking.experienceId}:detail`),
+            this.cache.invalidate(`experience:${booking.experienceId}:slots:*`),
+            this.cache.invalidate(`experiences:*`),
+          ]);
+        }
+
+        // Emit booking.cancelled event (fire-and-forget)
+        if (this.eventBus) {
+          this.eventBus.emitAsync(
+            createEvent(EventTypes.BOOKING_CANCELLED, {
+              bookingId: id,
+              userId: booking.userId,
+              experienceId: booking.experienceId,
+              experienceTitle: booking.experience.title,
+              hostId: booking.experience.hostId,
+              cancelledBy: userId,
+              guestCount: booking.guestCount,
+            })
+          );
+        }
+
+        // Record cancellation metric
+        bookingsCancelledTotal.inc();
+
+        return result;
+      },
+      { maxRetries: 3, retryDelay: 100 }
+    );
   }
 
   // Host marks booking as completed
   async completeBooking(id: string, hostId: string) {
     const booking = await this.prisma.booking.findUnique({
       where: { id },
-      include: { experience: true },
+      include: {
+        experience: true,
+        user: {
+          select: { id: true, nombre: true, apellido: true },
+        },
+      },
     });
 
     if (!booking) {
@@ -553,7 +819,7 @@ export class BookingService {
       throw new AppError('Solo puedes completar reservaciones confirmadas', 400);
     }
 
-    return this.prisma.booking.update({
+    const updated = await this.prisma.booking.update({
       where: { id },
       data: { status: 'COMPLETED' },
       include: {
@@ -561,6 +827,24 @@ export class BookingService {
         timeSlot: true,
       },
     });
+
+    // Emit booking.completed event (fire-and-forget)
+    if (this.eventBus && booking.user) {
+      this.eventBus.emitAsync(
+        createEvent(EventTypes.BOOKING_COMPLETED, {
+          bookingId: id,
+          userId: booking.userId,
+          userName: `${booking.user.nombre} ${booking.user.apellido || ''}`.trim(),
+          experienceId: booking.experienceId,
+          experienceTitle: booking.experience.title,
+          hostId,
+          totalPrice: Number(booking.totalPrice),
+          guestCount: booking.guestCount,
+        })
+      );
+    }
+
+    return updated;
   }
 
   // ============================================
@@ -632,6 +916,99 @@ export class BookingService {
     });
 
     return review;
+  }
+
+  // ============================================
+  // CLEANUP & MAINTENANCE
+  // ============================================
+
+  /**
+   * Limpia bookings en estado PENDING_PAYMENT o PAYMENT_FAILED
+   * que han superado el timeout (por defecto 30 minutos).
+   * Restaura la capacidad de los slots.
+   */
+  async cleanupFailedBookings(timeoutMinutes: number = 30) {
+    const cutoffTime = new Date(Date.now() - timeoutMinutes * 60 * 1000);
+
+    const failedBookings = await this.prisma.booking.findMany({
+      where: {
+        status: {
+          in: ['PENDING_PAYMENT', 'PAYMENT_FAILED'],
+        },
+        createdAt: {
+          lt: cutoffTime,
+        },
+      },
+      include: {
+        timeSlot: true,
+        experience: {
+          select: { id: true, title: true },
+        },
+      },
+    });
+
+    if (failedBookings.length === 0) {
+      return {
+        cleaned: 0,
+        details: [],
+      };
+    }
+
+    // Agrupar por timeSlot para optimizar las actualizaciones
+    const slotUpdates = new Map<string, number>();
+    const details: Array<{
+      bookingId: string;
+      experienceTitle: string;
+      guestCount: number;
+      status: string;
+      createdAt: Date;
+    }> = [];
+
+    for (const booking of failedBookings) {
+      const current = slotUpdates.get(booking.timeSlotId) || 0;
+      slotUpdates.set(booking.timeSlotId, current + booking.guestCount);
+
+      details.push({
+        bookingId: booking.id,
+        experienceTitle: booking.experience.title,
+        guestCount: booking.guestCount,
+        status: booking.status,
+        createdAt: booking.createdAt,
+      });
+    }
+
+    // Ejecutar limpieza en transacción
+    await this.prisma.$transaction(async (tx) => {
+      // Restaurar capacidad de slots
+      for (const [timeSlotId, guestCount] of slotUpdates) {
+        await tx.experienceTimeSlot.update({
+          where: { id: timeSlotId },
+          data: {
+            bookedCount: { decrement: guestCount },
+            isAvailable: true,
+          },
+        });
+      }
+
+      // Marcar bookings como cancelados
+      await tx.booking.updateMany({
+        where: {
+          id: {
+            in: failedBookings.map((b) => b.id),
+          },
+        },
+        data: {
+          status: 'CANCELLED',
+          cancelledAt: new Date(),
+        },
+      });
+    });
+
+    return {
+      cleaned: failedBookings.length,
+      details,
+      slotsUpdated: slotUpdates.size,
+    };
   }
 
   // ============================================

@@ -2,6 +2,34 @@ import { MOCK_STORIES } from './mockData';
 
 const API_BASE = 'http://localhost:3005/api';
 
+// Custom error class with status code
+export class ApiError extends Error {
+  statusCode: number;
+  code?: string;
+  details?: Record<string, unknown>;
+
+  constructor(
+    message: string,
+    statusCode: number,
+    code?: string,
+    details?: Record<string, unknown>
+  ) {
+    super(message);
+    this.name = 'ApiError';
+    this.statusCode = statusCode;
+    this.code = code;
+    this.details = details;
+  }
+
+  is409Conflict(): boolean {
+    return this.statusCode === 409;
+  }
+
+  isConcurrencyError(): boolean {
+    return this.statusCode === 409;
+  }
+}
+
 // Token management (synced with AuthContext)
 export function getToken(): string | null {
   return localStorage.getItem('auth_token');
@@ -34,15 +62,24 @@ class ApiClient {
     return headers;
   }
 
+  private async handleResponse<T>(res: Response): Promise<T> {
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({ message: 'Request failed' }));
+      throw new ApiError(
+        error.message || 'Request failed',
+        res.status,
+        error.code,
+        error
+      );
+    }
+    return res.json();
+  }
+
   async get<T>(path: string): Promise<T> {
     const res = await fetch(`${this.baseUrl}${path}`, {
       headers: this.getHeaders(),
     });
-    if (!res.ok) {
-      const error = await res.json().catch(() => ({ message: 'Request failed' }));
-      throw new Error(error.message || 'Request failed');
-    }
-    return res.json();
+    return this.handleResponse<T>(res);
   }
 
   async post<T>(path: string, data: unknown): Promise<T> {
@@ -51,11 +88,7 @@ class ApiClient {
       headers: this.getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) {
-      const error = await res.json().catch(() => ({ message: 'Request failed' }));
-      throw new Error(error.message || 'Request failed');
-    }
-    return res.json();
+    return this.handleResponse<T>(res);
   }
 
   async put<T>(path: string, data: unknown): Promise<T> {
@@ -64,11 +97,7 @@ class ApiClient {
       headers: this.getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) {
-      const error = await res.json().catch(() => ({ message: 'Request failed' }));
-      throw new Error(error.message || 'Request failed');
-    }
-    return res.json();
+    return this.handleResponse<T>(res);
   }
 
   async delete<T>(path: string): Promise<T> {
@@ -76,11 +105,7 @@ class ApiClient {
       method: 'DELETE',
       headers: this.getHeaders(),
     });
-    if (!res.ok) {
-      const error = await res.json().catch(() => ({ message: 'Request failed' }));
-      throw new Error(error.message || 'Request failed');
-    }
-    return res.json();
+    return this.handleResponse<T>(res);
   }
 }
 

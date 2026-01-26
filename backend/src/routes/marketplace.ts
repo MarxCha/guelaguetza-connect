@@ -2,6 +2,7 @@ import { FastifyPluginAsync } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { MarketplaceService } from '../services/marketplace.service.js';
+import { ConcurrencyError } from '../utils/errors.js';
 import {
   CreateProductSchema,
   UpdateProductSchema,
@@ -18,7 +19,7 @@ import {
 
 const marketplaceRoutes: FastifyPluginAsync = async (fastify) => {
   const app = fastify.withTypeProvider<ZodTypeProvider>();
-  const marketplaceService = new MarketplaceService(fastify.prisma);
+  const marketplaceService = new MarketplaceService(fastify.prisma, fastify.cache, fastify.eventBus);
 
   // ============================================
   // PRODUCTS (Public)
@@ -197,11 +198,21 @@ const marketplaceRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (request, reply) => {
-      const orders = await marketplaceService.createOrder(
-        request.user.userId,
-        request.body
-      );
-      return reply.status(201).send(orders);
+      try {
+        const orders = await marketplaceService.createOrder(
+          request.user.userId,
+          request.body
+        );
+        return reply.status(201).send(orders);
+      } catch (error) {
+        if (error instanceof ConcurrencyError) {
+          return reply.status(409).send({
+            error: 'ConcurrencyError',
+            message: error.message,
+          });
+        }
+        throw error;
+      }
     }
   );
 

@@ -7,8 +7,10 @@ export class AuthService {
   constructor(private prisma: PrismaClient) {}
 
   async register(data: RegisterInput) {
+    const normalizedEmail = data.email.toLowerCase();
+
     const existingUser = await this.prisma.user.findUnique({
-      where: { email: data.email },
+      where: { email: normalizedEmail },
     });
 
     if (existingUser) {
@@ -20,6 +22,7 @@ export class AuthService {
     const user = await this.prisma.user.create({
       data: {
         ...data,
+        email: normalizedEmail,
         password: hashedPassword,
       },
       select: {
@@ -39,11 +42,19 @@ export class AuthService {
 
   async login(email: string, password: string) {
     const user = await this.prisma.user.findUnique({
-      where: { email },
+      where: { email: email.toLowerCase() },
     });
 
     if (!user) {
       throw new AppError('Credenciales inválidas', 401);
+    }
+
+    // Check if user is banned
+    if (user.bannedAt) {
+      throw new AppError(
+        `Tu cuenta ha sido suspendida${user.bannedReason ? `: ${user.bannedReason}` : ''}`,
+        403
+      );
     }
 
     const isValidPassword = await bcrypt.compare(password, user.password);

@@ -8,7 +8,7 @@ import {
 } from '../schemas/gamification.schema.js';
 
 const gamificationRoutes: FastifyPluginAsync = async (fastify) => {
-  const gamificationService = new GamificationService(fastify.prisma);
+  const gamificationService = new GamificationService(fastify.prisma, fastify.cache);
 
   // Get current user's stats
   fastify.get(

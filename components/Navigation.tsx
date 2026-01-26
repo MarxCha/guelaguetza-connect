@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import haptics from '../services/haptics';
 import NotificationBell from './ui/NotificationBell';
 import NotificationsDropdown from './NotificationsDropdown';
+import ThemeToggle from './ui/ThemeToggle';
 
 interface NavigationProps {
   currentView: ViewState;
@@ -130,9 +131,16 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, setView, onUserPro
             })}
           </nav>
 
-          {/* User Info & Notifications */}
-          {isAuthenticated && (
-            <div className="p-4 border-t border-gray-100 dark:border-gray-800">
+          {/* Theme Toggle & User Info */}
+          <div className="p-4 border-t border-gray-100 dark:border-gray-800 space-y-4">
+            {/* Theme Toggle */}
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600 dark:text-gray-400">Tema</span>
+              <ThemeToggle variant="dropdown" size="sm" showLabel={false} />
+            </div>
+
+            {/* User Info & Notifications */}
+            {isAuthenticated && (
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-oaxaca-pink/20 flex items-center justify-center">
@@ -151,8 +159,8 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, setView, onUserPro
                 </div>
                 <NotificationBell onClick={() => setShowNotifications(true)} />
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </aside>
 
         {/* Notifications Dropdown */}
@@ -234,6 +242,14 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, setView, onUserPro
                 );
               })}
             </div>
+
+            {/* Theme Toggle for Mobile */}
+            <div className="px-4 pb-4 pt-2 border-t border-gray-100 dark:border-gray-800 mt-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Tema</span>
+                <ThemeToggle variant="dropdown" size="sm" showLabel />
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -241,9 +257,10 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, setView, onUserPro
       <nav
         className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 pb-safe z-50 transition-colors"
         role="navigation"
-        aria-label="Navegación principal"
+        aria-label="Navegacion principal"
       >
-        <div className="flex justify-around items-center h-16">
+        {/* Minimum height of 64px ensures 44px touch targets with some padding */}
+        <div className="flex justify-around items-center h-16 sm:h-[68px]">
           {mobileNavItems.map((item) => {
             const isActive = currentView === item.view;
             const isProfile = item.view === ViewState.PROFILE;
@@ -254,7 +271,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, setView, onUserPro
                 onClick={() => handleNavClick(item.view)}
                 aria-label={item.label}
                 aria-current={isActive ? 'page' : undefined}
-                className={`flex flex-col items-center justify-center w-full h-full transition-colors duration-200 ${
+                className={`flex flex-col items-center justify-center w-full h-full min-h-[48px] transition-colors duration-200 focus-visible:bg-gray-100 dark:focus-visible:bg-gray-800 focus-visible:outline-none ${
                   isActive ? 'text-oaxaca-pink' : 'text-gray-500 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
                 }`}
               >
@@ -278,21 +295,21 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, setView, onUserPro
             );
           })}
 
-          {/* More Button */}
+          {/* More Button - With minimum 44px touch target */}
           <button
             onClick={() => {
               haptics.tap();
               setShowMoreMenu(true);
             }}
-            aria-label="Más opciones"
+            aria-label="Mas opciones"
             aria-expanded={showMoreMenu}
             aria-haspopup="dialog"
-            className={`flex flex-col items-center justify-center w-full h-full transition-colors duration-200 ${
+            className={`flex flex-col items-center justify-center w-full h-full min-h-[48px] transition-colors duration-200 focus-visible:bg-gray-100 dark:focus-visible:bg-gray-800 focus-visible:outline-none ${
               isMoreActive ? 'text-oaxaca-pink' : 'text-gray-500 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
             }`}
           >
             <MoreHorizontal size={24} strokeWidth={isMoreActive ? 2.5 : 2} aria-hidden="true" />
-            <span className="text-[10px] font-medium mt-1">Más</span>
+            <span className="text-[10px] sm:text-xs font-medium mt-1">Mas</span>
           </button>
         </div>
 

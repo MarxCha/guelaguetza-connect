@@ -1,0 +1,140 @@
+# ============================================
+# CODEOWNERS - Guelaguetza Connect
+# ============================================
+# Define quién debe revisar los cambios en áreas específicas del código.
+# Los CODEOWNERS son automáticamente solicitados como revisores en PRs.
+#
+# Formato:
+# pattern email|username
+#
+# Docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+# ============================================
+
+# ============================================
+# DEFAULT OWNERS
+# ============================================
+# Estos usuarios son los propietarios por defecto de todo el código
+# a menos que una regla más específica se aplique.
+*                           @marxchavez
+
+# ============================================
+# BACKEND
+# ============================================
+/backend/                   @marxchavez
+/backend/src/               @marxchavez
+/backend/prisma/            @marxchavez
+/backend/package.json       @marxchavez
+/backend/package-lock.json  @marxchavez
+
+# Domain Layer - Lógica de negocio crítica
+/backend/src/domain/        @marxchavez
+/backend/src/application/   @marxchavez
+
+# Database & Migrations
+/backend/prisma/schema.prisma           @marxchavez
+/backend/prisma/migrations/             @marxchavez
+/backend/scripts/                       @marxchavez
+
+# Services - Lógica de negocio
+/backend/src/services/      @marxchavez
+/backend/src/routes/        @marxchavez
+
+# Infrastructure
+/backend/src/infrastructure/            @marxchavez
+/backend/src/plugins/       @marxchavez
+
+# Tests
+/backend/test/              @marxchavez
+/backend/**/*.test.ts       @marxchavez
+/backend/**/*.spec.ts       @marxchavez
+
+# ============================================
+# FRONTEND
+# ============================================
+/src/                       @marxchavez
+/components/                @marxchavez
+/services/                  @marxchavez
+/contexts/                  @marxchavez
+/hooks/                     @marxchavez
+/package.json               @marxchavez
+/package-lock.json          @marxchavez
+
+# UI Components - Requieren revisión de UX
+/components/ui/             @marxchavez
+/components/admin/          @marxchavez
+
+# Tests
+/test/                      @marxchavez
+/**/*.test.tsx              @marxchavez
+/**/*.spec.tsx              @marxchavez
+
+# ============================================
+# INFRASTRUCTURE & DEVOPS
+# ============================================
+# Docker
+/Dockerfile*                @marxchavez
+/docker-compose*.yml        @marxchavez
+/.dockerignore              @marxchavez
+
+# CI/CD
+/.github/                   @marxchavez
+/.github/workflows/         @marxchavez
+
+# Monitoring
+/backend/docker-compose.monitoring.yml  @marxchavez
+/backend/grafana/           @marxchavez
+/prometheus.yml             @marxchavez
+
+# ============================================
+# CONFIGURATION FILES
+# ============================================
+# TypeScript
+/tsconfig.json              @marxchavez
+/backend/tsconfig.json      @marxchavez
+
+# Vite & Build
+/vite.config.ts             @marxchavez
+/vitest.config*.ts          @marxchavez
+
+# Environment
+/.env.example               @marxchavez
+/.env.docker.prod           @marxchavez
+
+# ============================================
+# DOCUMENTATION
+# ============================================
+/README.md                  @marxchavez
+/backend/README*.md         @marxchavez
+/backend/docs/              @marxchavez
+/*.md                       @marxchavez
+
+# Architecture Docs - Requieren aprobación explícita
+/*ARQUITECTURA*.md          @marxchavez
+/*ARCHITECTURE*.md          @marxchavez
+/PLAN_*.md                  @marxchavez
+
+# ============================================
+# SECURITY & SENSITIVE FILES
+# ============================================
+# Estos archivos requieren revisión extra cuidadosa
+/.github/dependabot.yml     @marxchavez
+/.github/CODEOWNERS         @marxchavez
+/backend/src/services/auth.service.ts       @marxchavez
+/backend/src/services/stripe.service.ts     @marxchavez
+/backend/src/routes/webhooks.ts             @marxchavez
+
+# ============================================
+# TESTING CONFIGURATION
+# ============================================
+/vitest.config.ts           @marxchavez
+/backend/vitest.config*.ts  @marxchavez
+/playwright.config.ts       @marxchavez
+
+# ============================================
+# NOTES
+# ============================================
+# - Los CODEOWNERS deben aprobar los PRs que afecten sus áreas
+# - Puedes usar equipos de GitHub: @org/team-name
+# - Las reglas más específicas (abajo) tienen prioridad sobre las generales
+# - Los usuarios deben tener permisos de escritura en el repo
+# ============================================

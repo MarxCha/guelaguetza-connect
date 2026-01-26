@@ -9,6 +9,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import ThemeToggle from './ui/ThemeToggle';
 
 const HERO_IMAGES = [
   '/images/guelaguetza-dancers.png',
@@ -87,100 +88,120 @@ const LandingView: React.FC<LandingViewProps> = ({ onUserSelected }) => {
           className={`absolute inset-0 transition-opacity duration-1000 ${
             index === heroIndex ? 'opacity-100' : 'opacity-0'
           }`}
+          aria-hidden="true"
         >
           <img
             src={img}
             alt=""
             className="w-full h-full object-cover"
+            loading="lazy"
           />
         </div>
       ))}
 
       {/* Overlay gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-oaxaca-purple/80 via-oaxaca-pink/70 to-oaxaca-yellow/60" />
+      <div className="absolute inset-0 bg-gradient-to-b from-oaxaca-purple/80 via-oaxaca-pink/70 to-oaxaca-yellow/60" aria-hidden="true" />
 
       {/* Decorative blur elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
+      <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+        <div className="absolute -top-40 -right-40 w-60 sm:w-80 h-60 sm:h-80 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-60 sm:w-80 h-60 sm:h-80 bg-white/10 rounded-full blur-3xl" />
       </div>
 
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Header */}
-        <header className="pt-8 pb-6 px-6 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 mb-4">
-            <Sparkles size={16} className="text-oaxaca-yellow" />
-            <span className="text-white text-sm font-medium">Julio 21-28, 2025</span>
+        <header className="pt-6 sm:pt-8 pb-4 sm:pb-6 px-4 sm:px-6 text-center relative">
+          {/* Theme Toggle in top right - minimum touch target 44px */}
+          <div className="absolute top-3 sm:top-4 right-3 sm:right-4">
+            <ThemeToggle
+              variant="toggle"
+              size="md"
+              className="min-w-[44px] min-h-[44px]"
+            />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
+
+          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-3 sm:px-4 py-1.5 sm:py-2 mb-3 sm:mb-4">
+            <Sparkles size={14} className="text-oaxaca-yellow sm:w-4 sm:h-4" aria-hidden="true" />
+            <span className="text-white text-xs sm:text-sm font-medium">Julio 21-28, 2025</span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-2">
             Guelaguetza Connect
           </h1>
-          <p className="text-white/80 text-lg max-w-md mx-auto">
+          <p className="text-white/80 text-base sm:text-lg max-w-xs sm:max-w-md mx-auto px-2">
             La maxima fiesta de los oaxaquenos en tu bolsillo
           </p>
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 px-4 pb-8">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-white text-center text-xl font-semibold mb-6">
+        <main className="flex-1 px-3 sm:px-4 pb-6 sm:pb-8">
+          <div className="max-w-5xl mx-auto">
+            <h2 className="text-white text-center text-lg sm:text-xl font-semibold mb-4 sm:mb-6">
               Selecciona como deseas ingresar
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Responsive grid: 1 col mobile, 2 cols tablet, 3 cols desktop for better use of space */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {USER_TYPES.map((userType) => (
                 <button
                   key={userType.type}
                   onClick={() => handleSelectUser(userType.type)}
                   disabled={loading !== null}
-                  className={`relative bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl p-5 text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl active:scale-[0.98] ${
+                  aria-label={`Ingresar como ${userType.name}`}
+                  aria-busy={loading === userType.type}
+                  className={`relative bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl p-4 sm:p-5 text-left transition-all duration-200 hover:scale-[1.02] hover:shadow-2xl active:scale-[0.98] focus-visible:ring-4 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-oaxaca-purple ${
                     selectedType === userType.type ? 'ring-4 ring-white shadow-2xl scale-[1.02]' : ''
                   } ${loading && loading !== userType.type ? 'opacity-50' : ''}`}
                 >
                   {/* Icon & Title */}
-                  <div className="flex items-start gap-4 mb-3">
-                    <div className={`p-3 rounded-xl bg-gradient-to-br ${userType.color} text-white shadow-lg`}>
-                      <userType.icon size={28} />
+                  <div className="flex items-start gap-3 sm:gap-4 mb-2 sm:mb-3">
+                    <div className={`p-2.5 sm:p-3 rounded-xl bg-gradient-to-br ${userType.color} text-white shadow-lg flex-shrink-0`}>
+                      <userType.icon size={24} className="sm:w-7 sm:h-7" aria-hidden="true" />
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-bold text-lg text-gray-900 dark:text-white">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-base sm:text-lg text-gray-900 dark:text-white truncate">
                         {userType.title}
                       </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                         {userType.name}
                       </p>
                     </div>
                     <ChevronRight
-                      size={24}
-                      className={`text-gray-400 transition-transform ${
+                      size={20}
+                      className={`text-gray-400 transition-transform flex-shrink-0 sm:w-6 sm:h-6 ${
                         selectedType === userType.type ? 'translate-x-1' : ''
                       }`}
+                      aria-hidden="true"
                     />
                   </div>
 
                   {/* Description */}
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mb-2 sm:mb-3 line-clamp-2">
                     {userType.description}
                   </p>
 
-                  {/* Features */}
-                  <div className="flex flex-wrap gap-2">
-                    {userType.features.map((feature, idx) => (
+                  {/* Features - Hidden on very small screens, show 2 on mobile, all on larger */}
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                    {userType.features.slice(0, 3).map((feature, idx) => (
                       <span
                         key={idx}
-                        className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-full"
+                        className="text-[10px] sm:text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 sm:py-1 rounded-full"
                       >
                         {feature}
                       </span>
                     ))}
+                    {userType.features.length > 3 && (
+                      <span className="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500 px-1 hidden sm:inline">
+                        +{userType.features.length - 3} mas
+                      </span>
+                    )}
                   </div>
 
                   {/* Loading indicator */}
                   {loading === userType.type && (
-                    <div className="absolute inset-0 bg-white/80 dark:bg-gray-800/80 rounded-2xl flex items-center justify-center">
+                    <div className="absolute inset-0 bg-white/80 dark:bg-gray-800/80 rounded-2xl flex items-center justify-center" role="status">
                       <div className="flex items-center gap-2">
-                        <div className="w-5 h-5 border-2 border-oaxaca-purple border-t-transparent rounded-full animate-spin" />
-                        <span className="text-oaxaca-purple font-medium">Ingresando...</span>
+                        <div className="w-5 h-5 border-2 border-oaxaca-purple border-t-transparent rounded-full animate-spin" aria-hidden="true" />
+                        <span className="text-oaxaca-purple font-medium text-sm sm:text-base">Ingresando...</span>
                       </div>
                     </div>
                   )}
@@ -191,18 +212,18 @@ const LandingView: React.FC<LandingViewProps> = ({ onUserSelected }) => {
         </main>
 
         {/* Footer */}
-        <footer className="py-6 px-4 text-center">
-          <div className="flex items-center justify-center gap-6 text-white/60 text-sm mb-4">
+        <footer className="py-4 sm:py-6 px-4 text-center mt-auto">
+          <div className="flex items-center justify-center gap-4 sm:gap-6 text-white/60 text-xs sm:text-sm mb-2 sm:mb-4 flex-wrap">
             <div className="flex items-center gap-1">
-              <MapPin size={14} />
+              <MapPin size={12} className="sm:w-3.5 sm:h-3.5" aria-hidden="true" />
               <span>Oaxaca, Mexico</span>
             </div>
             <div className="flex items-center gap-1">
-              <Calendar size={14} />
+              <Calendar size={12} className="sm:w-3.5 sm:h-3.5" aria-hidden="true" />
               <span>Guelaguetza 2025</span>
             </div>
           </div>
-          <p className="text-white/40 text-xs">
+          <p className="text-white/40 text-[10px] sm:text-xs">
             Celebrando la cultura y tradiciones de Oaxaca
           </p>
         </footer>

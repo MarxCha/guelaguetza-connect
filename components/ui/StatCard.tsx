@@ -6,7 +6,7 @@ interface StatCardProps {
   value: string | number;
   change?: number;
   icon?: React.ReactNode;
-  color?: 'pink' | 'purple' | 'yellow' | 'green' | 'blue';
+  color?: 'pink' | 'purple' | 'yellow' | 'green' | 'blue' | 'red' | 'indigo' | 'orange';
 }
 
 const StatCard: React.FC<StatCardProps> = ({
@@ -22,6 +22,9 @@ const StatCard: React.FC<StatCardProps> = ({
     yellow: 'bg-oaxaca-yellow/10 text-oaxaca-yellow',
     green: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
     blue: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
+    red: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
+    indigo: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
+    orange: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400',
   };
 
   const getChangeIcon = () => {
