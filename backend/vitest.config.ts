@@ -29,7 +29,11 @@ export default defineConfig({
       },
     },
     include: ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    exclude: ['node_modules', 'dist', '.idea', '.git', '.cache'],
+    exclude: [
+      'node_modules', 'dist', '.idea', '.git', '.cache',
+      'test/integration/**',
+      'src/middleware/auth.middleware.test.ts', // Integration test (requires DB)
+    ],
     testTimeout: 10000,
     // Separate unit and integration tests
     typecheck: {

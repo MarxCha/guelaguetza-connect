@@ -136,8 +136,15 @@ export class EventBus {
       })
     );
 
-    const successCount = results.filter((r) => r.status === 'fulfilled').length;
-    const failedCount = results.filter((r) => r.status === 'rejected').length;
+    // Count based on handler return values, not promise status
+    // (try/catch means all promises are fulfilled, errors are in the return value)
+    const handlerResults = results
+      .filter((r): r is PromiseFulfilledResult<{ name: string; success: boolean; error?: Error }> => r.status === 'fulfilled')
+      .map((r) => r.value);
+
+    const successCount = handlerResults.filter((r) => r.success).length;
+    const failedCount = handlerResults.filter((r) => !r.success).length;
+    const errors = handlerResults.filter((r) => !r.success && r.error).map((r) => r.error!);
     const duration = Date.now() - startTime;
 
     this.logger.info(`Event processing completed: ${event.type}`, {
@@ -152,9 +159,7 @@ export class EventBus {
       handlersExecuted: successCount,
       handlersFailed: failedCount,
       duration,
-      errors: results
-        .filter((r) => r.status === 'rejected')
-        .map((r) => (r as PromiseRejectedResult).reason),
+      errors,
     };
   }
 
@@ -205,7 +210,10 @@ export class EventBus {
           return result;
         }
 
-        // If no handlers executed successfully, retry
+        // If no handlers executed successfully, retry with the original error
+        if (result.errors && result.errors.length > 0) {
+          throw result.errors[0];
+        }
         throw new Error('All handlers failed');
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
