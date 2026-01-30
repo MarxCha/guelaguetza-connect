@@ -35,13 +35,79 @@ export const prismaMock = {
     create: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
+    count: vi.fn(),
   },
   booking: {
+    findUnique: vi.fn(),
+    findMany: vi.fn(),
+    findFirst: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    updateMany: vi.fn(),
+    delete: vi.fn(),
+    count: vi.fn(),
+  },
+  experience: {
     findUnique: vi.fn(),
     findMany: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
+    count: vi.fn(),
+  },
+  experienceTimeSlot: {
+    findUnique: vi.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    createMany: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+  },
+  experienceReview: {
+    findUnique: vi.fn(),
+    create: vi.fn(),
+    aggregate: vi.fn(),
+  },
+  product: {
+    findUnique: vi.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    count: vi.fn(),
+  },
+  cart: {
+    findUnique: vi.fn(),
+    create: vi.fn(),
+  },
+  cartItem: {
+    findUnique: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    deleteMany: vi.fn(),
+  },
+  order: {
+    findUnique: vi.fn(),
+    findMany: vi.fn(),
+    findFirst: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    updateMany: vi.fn(),
+    count: vi.fn(),
+  },
+  sellerProfile: {
+    findUnique: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+  },
+  productReview: {
+    findUnique: vi.fn(),
+    create: vi.fn(),
+    aggregate: vi.fn(),
+  },
+  activityLog: {
+    groupBy: vi.fn(),
   },
   community: {
     findUnique: vi.fn(),
@@ -49,18 +115,21 @@ export const prismaMock = {
     create: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
+    count: vi.fn(),
   },
   like: {
     findUnique: vi.fn(),
     findMany: vi.fn(),
     create: vi.fn(),
     delete: vi.fn(),
+    count: vi.fn(),
   },
   comment: {
     findMany: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
+    count: vi.fn(),
   },
   badge: {
     findMany: vi.fn(),
@@ -81,13 +150,17 @@ export const prismaMock = {
 };
 
 // Mock del módulo @prisma/client
-vi.mock('@prisma/client', () => ({
-  PrismaClient: class {
-    constructor() {
-      return prismaMock;
-    }
-  },
-}));
+vi.mock('@prisma/client', async () => {
+  const actual = await vi.importActual('@prisma/client') as any;
+  return {
+    ...actual,
+    PrismaClient: class {
+      constructor() {
+        return prismaMock;
+      }
+    },
+  };
+});
 
 // Reset de mocks después de cada test
 afterEach(() => {

@@ -1,10 +1,12 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import * as crypto from 'crypto';
 import { SignJWT, jwtVerify } from 'jose';
 import { v4 as uuidv4 } from 'uuid';
 import { RegisterInput, UpdateProfileInput } from '../schemas/auth.schema.js';
 import { AppError, NotFoundError, UnauthorizedError } from '../utils/errors.js';
 import { getTokenBlacklistService, TokenBlacklistService } from './token-blacklist.service.js';
+import { EmailService } from './email.service.js';
 
 // ============================================
 // TIPOS Y CONFIGURACIÓN
@@ -588,6 +590,17 @@ export class AuthService {
   }
 
   /**
+   * Revoca un refresh token específico (logout de sesión única)
+   */
+  async revokeToken(refreshToken: string): Promise<void> {
+    const payload = await this.verifyRefreshToken(refreshToken);
+    if (payload.familyId && payload.jti) {
+      await this.markTokenAsUsed(payload.jti, payload.familyId, payload.sub, payload.exp);
+      await this.invalidateTokenFamily(payload.familyId, payload.sub, 'User logout');
+    }
+  }
+
+  /**
    * Revoca todos los tokens de un usuario (logout de todas las sesiones)
    * Invalida todas las familias de tokens del usuario
    */
@@ -609,6 +622,72 @@ export class AuthService {
       message: 'Todas las sesiones han sido cerradas',
       invalidatedSessions: invalidatedCount,
     };
+  }
+
+  // ============================================
+  // FORGOT / RESET PASSWORD
+  // ============================================
+
+  /**
+   * Genera un token de reset y envía email
+   */
+  async forgotPassword(email: string): Promise<{ success: true; message: string }> {
+    const user = await this.prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+      select: { id: true, email: true, nombre: true },
+    });
+
+    // Always return success to prevent email enumeration
+    if (!user) {
+      return { success: true, message: 'Si el email existe, recibirás un enlace para restablecer tu contraseña' };
+    }
+
+    // Generate reset token (random hex, stored hashed)
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+    const resetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    // Store hashed token in Redis
+    await this.tokenBlacklistService.setResetToken(user.id, resetTokenHash, 3600);
+
+    // Build reset URL
+    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetUrl = `${baseUrl}/reset-password?token=${resetToken}&uid=${user.id}`;
+
+    // Send email
+    await EmailService.sendResetPassword(user.email, user.nombre || 'Usuario', resetUrl);
+
+    return { success: true, message: 'Si el email existe, recibirás un enlace para restablecer tu contraseña' };
+  }
+
+  /**
+   * Restablece la contraseña usando un token de reset
+   */
+  async resetPassword(userId: string, token: string, newPassword: string): Promise<{ success: true; message: string }> {
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    // Verify token from Redis
+    const storedHash = await this.tokenBlacklistService.getResetToken(userId);
+    if (!storedHash || storedHash !== tokenHash) {
+      throw new AppError('Token inválido o expirado', 400);
+    }
+
+    // Hash new password
+    const hashedPassword = await this.hashPassword(newPassword);
+
+    // Update password
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+    });
+
+    // Delete reset token
+    await this.tokenBlacklistService.deleteResetToken(userId);
+
+    // Revoke all existing sessions for security
+    await this.tokenBlacklistService.revokeAllUserTokens(userId);
+
+    return { success: true, message: 'Contraseña restablecida correctamente. Inicia sesión con tu nueva contraseña.' };
   }
 
   // ============================================

@@ -171,9 +171,32 @@ export async function buildApp(): Promise<FastifyInstance> {
   // Metrics endpoint (no prefix, accessed as /metrics)
   await app.register(metricsRoutes);
 
-  // Health check
+  // Health check with DB and Redis status
   app.get('/health', async () => {
-    return { status: 'ok', timestamp: new Date().toISOString() };
+    const checks: Record<string, string> = {};
+
+    // Check PostgreSQL
+    try {
+      await app.prisma.$queryRaw`SELECT 1`;
+      checks.database = 'ok';
+    } catch {
+      checks.database = 'error';
+    }
+
+    // Check Redis
+    try {
+      checks.redis = app.cache?.isReady() ? 'ok' : 'unavailable';
+    } catch {
+      checks.redis = 'error';
+    }
+
+    const allOk = Object.values(checks).every(v => v === 'ok' || v === 'unavailable');
+
+    return {
+      status: allOk ? 'ok' : 'degraded',
+      timestamp: new Date().toISOString(),
+      checks,
+    };
   });
 
   // Root endpoint

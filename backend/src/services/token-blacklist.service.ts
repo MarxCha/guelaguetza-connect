@@ -277,6 +277,22 @@ export class TokenBlacklistService {
     await this.cache.invalidate('auth:*');
   }
 
+  // ============================================
+  // RESET TOKEN METHODS
+  // ============================================
+
+  async setResetToken(userId: string, tokenHash: string, ttlSeconds: number): Promise<void> {
+    await this.cache.set(`auth:reset:${userId}`, tokenHash, ttlSeconds);
+  }
+
+  async getResetToken(userId: string): Promise<string | null> {
+    return await this.cache.get<string>(`auth:reset:${userId}`);
+  }
+
+  async deleteResetToken(userId: string): Promise<void> {
+    await this.cache.invalidate(`auth:reset:${userId}`);
+  }
+
   /**
    * Verifica si el servicio está listo para usar
    */

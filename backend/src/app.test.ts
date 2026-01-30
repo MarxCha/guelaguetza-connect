@@ -22,8 +22,10 @@ describe('App', () => {
 
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.body);
-      expect(body).toHaveProperty('status', 'ok');
+      expect(body).toHaveProperty('status');
+      expect(['ok', 'degraded']).toContain(body.status);
       expect(body).toHaveProperty('timestamp');
+      expect(body).toHaveProperty('checks');
     });
   });
 

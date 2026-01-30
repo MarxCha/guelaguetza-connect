@@ -10,6 +10,7 @@ import { EventBus, getEventBus, setEventBus } from './EventBus.js';
 import { NotificationHandler } from './handlers/NotificationHandler.js';
 import { GamificationHandler } from './handlers/GamificationHandler.js';
 import { AnalyticsHandler } from './handlers/AnalyticsHandler.js';
+import { EmailHandler } from './handlers/EmailHandler.js';
 
 // Re-export everything for convenience
 export * from './EventBus.js';
@@ -17,6 +18,7 @@ export * from './types.js';
 export { NotificationHandler } from './handlers/NotificationHandler.js';
 export { GamificationHandler } from './handlers/GamificationHandler.js';
 export { AnalyticsHandler } from './handlers/AnalyticsHandler.js';
+export { EmailHandler } from './handlers/EmailHandler.js';
 
 /**
  * Inicializa el EventBus y registra todos los handlers
@@ -65,12 +67,14 @@ export function initializeEventBus(prisma: PrismaClient): EventBus {
   const notificationHandler = new NotificationHandler(prisma);
   const gamificationHandler = new GamificationHandler(prisma, eventBus);
   const analyticsHandler = new AnalyticsHandler(prisma);
+  const emailHandler = new EmailHandler(prisma);
 
   // Register all handlers
   console.log('[EventBus] Registering handlers...');
   notificationHandler.register(eventBus);
   gamificationHandler.register(eventBus);
   analyticsHandler.register(eventBus);
+  emailHandler.register(eventBus);
 
   // Log stats
   const stats = eventBus.getStats();

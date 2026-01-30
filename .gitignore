@@ -27,6 +27,9 @@ dist-ssr
 *.sln
 *.sw?
 
+# Dev builds
+dev-dist/
+
 # Testing
 coverage/
 test-results/

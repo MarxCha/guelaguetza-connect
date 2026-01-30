@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import DOMPurify from 'dompurify';
 import { Send, Sparkles, User, Bot, Trash2, ChevronLeft, Mic, MicOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -331,11 +332,12 @@ Puedo ayudarte con:
     return text.split('\n').map((line, i) => {
       // Bold
       line = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      const sanitized = DOMPurify.sanitize(line, { ALLOWED_TAGS: ['strong'] });
       // Bullet points
       if (line.startsWith('•')) {
-        return <li key={i} className="ml-4" dangerouslySetInnerHTML={{ __html: line.substring(1) }} />;
+        return <li key={i} className="ml-4" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(line.substring(1), { ALLOWED_TAGS: ['strong'] }) }} />;
       }
-      return <p key={i} className="mb-1" dangerouslySetInnerHTML={{ __html: line }} />;
+      return <p key={i} className="mb-1" dangerouslySetInnerHTML={{ __html: sanitized }} />;
     });
   };
 

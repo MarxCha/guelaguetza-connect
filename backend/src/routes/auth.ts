@@ -18,6 +18,16 @@ const changePasswordSchema = z.object({
   newPassword: z.string().min(6, 'La nueva contraseña debe tener al menos 6 caracteres'),
 });
 
+const forgotPasswordSchema = z.object({
+  email: z.string().email('Email inválido'),
+});
+
+const resetPasswordSchema = z.object({
+  userId: z.string().min(1, 'userId es requerido'),
+  token: z.string().min(1, 'Token es requerido'),
+  newPassword: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+});
+
 const authRoutes: FastifyPluginAsync = async (fastify) => {
   const authService = new AuthService(fastify.prisma);
 
@@ -155,6 +165,57 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(error.statusCode).send({ error: error.message });
       }
       throw error;
+    }
+  });
+
+  // Forgot password - sends reset email
+  fastify.post('/forgot-password', async (request, reply) => {
+    try {
+      const data = forgotPasswordSchema.parse(request.body);
+      const result = await authService.forgotPassword(data.email);
+      return reply.send(result);
+    } catch (error) {
+      if (error instanceof AppError) {
+        return reply.status(error.statusCode).send({ error: error.message });
+      }
+      throw error;
+    }
+  });
+
+  // Reset password with token
+  fastify.post('/reset-password', async (request, reply) => {
+    try {
+      const data = resetPasswordSchema.parse(request.body);
+      const result = await authService.resetPassword(data.userId, data.token, data.newPassword);
+      return reply.send(result);
+    } catch (error) {
+      if (error instanceof AppError) {
+        return reply.status(error.statusCode).send({ error: error.message });
+      }
+      throw error;
+    }
+  });
+
+  // Logout current session (blacklist current refresh token)
+  fastify.post('/logout', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    try {
+      const body = request.body as any;
+      const refreshToken =
+        body?.refreshToken ||
+        (request.cookies && (request.cookies as any)[REFRESH_TOKEN_COOKIE]);
+
+      if (refreshToken) {
+        await authService.revokeToken(refreshToken);
+      }
+
+      // Clear refresh token cookie
+      reply.clearCookie(REFRESH_TOKEN_COOKIE, { path: '/api/auth' });
+
+      return reply.send({ success: true, message: 'Sesión cerrada correctamente' });
+    } catch (error) {
+      // Even if token revocation fails, clear the cookie and return success
+      reply.clearCookie(REFRESH_TOKEN_COOKIE, { path: '/api/auth' });
+      return reply.send({ success: true, message: 'Sesión cerrada correctamente' });
     }
   });
 
