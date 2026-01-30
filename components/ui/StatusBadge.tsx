@@ -79,8 +79,8 @@ export const BookingStatusBadge: React.FC<BookingStatusBadgeProps> = ({
     PENDING_PAYMENT: {
       label: 'Procesando pago',
       icon: <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />,
-      colors: 'text-amber-700 dark:text-amber-400',
-      bgColors: 'bg-amber-100 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800',
+      colors: 'text-oaxaca-yellow dark:text-oaxaca-yellow',
+      bgColors: 'bg-oaxaca-yellow-light dark:bg-oaxaca-yellow/20 border-oaxaca-yellow/30 dark:border-oaxaca-yellow/30',
       ariaLabel: 'Pago en proceso',
     },
     PAYMENT_FAILED: {
@@ -93,8 +93,8 @@ export const BookingStatusBadge: React.FC<BookingStatusBadgeProps> = ({
     PENDING: {
       label: 'Pendiente',
       icon: <Hourglass className="w-4 h-4" aria-hidden="true" />,
-      colors: 'text-blue-700 dark:text-blue-400',
-      bgColors: 'bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800',
+      colors: 'text-oaxaca-sky dark:text-oaxaca-sky',
+      bgColors: 'bg-oaxaca-sky-light dark:bg-oaxaca-sky/20 border-oaxaca-sky/30 dark:border-oaxaca-sky/30',
       ariaLabel: 'Reservación pendiente',
     },
     CONFIRMED: {
@@ -183,8 +183,8 @@ export const OrderStatusBadge: React.FC<OrderStatusBadgeProps> = ({
     PENDING_PAYMENT: {
       label: 'Procesando pago',
       icon: <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />,
-      colors: 'text-amber-700 dark:text-amber-400',
-      bgColors: 'bg-amber-100 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800',
+      colors: 'text-oaxaca-yellow dark:text-oaxaca-yellow',
+      bgColors: 'bg-oaxaca-yellow-light dark:bg-oaxaca-yellow/20 border-oaxaca-yellow/30 dark:border-oaxaca-yellow/30',
       ariaLabel: 'Pago en proceso',
     },
     PAYMENT_FAILED: {
@@ -197,8 +197,8 @@ export const OrderStatusBadge: React.FC<OrderStatusBadgeProps> = ({
     PENDING: {
       label: 'Pendiente',
       icon: <Clock className="w-4 h-4" aria-hidden="true" />,
-      colors: 'text-blue-700 dark:text-blue-400',
-      bgColors: 'bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800',
+      colors: 'text-oaxaca-sky dark:text-oaxaca-sky',
+      bgColors: 'bg-oaxaca-sky-light dark:bg-oaxaca-sky/20 border-oaxaca-sky/30 dark:border-oaxaca-sky/30',
       ariaLabel: 'Orden pendiente',
     },
     PAID: {
@@ -211,15 +211,15 @@ export const OrderStatusBadge: React.FC<OrderStatusBadgeProps> = ({
     PROCESSING: {
       label: 'Procesando',
       icon: <Hourglass className="w-4 h-4" aria-hidden="true" />,
-      colors: 'text-purple-700 dark:text-purple-400',
-      bgColors: 'bg-purple-100 dark:bg-purple-900/30 border-purple-200 dark:border-purple-800',
+      colors: 'text-oaxaca-purple dark:text-oaxaca-purple',
+      bgColors: 'bg-oaxaca-purple-light dark:bg-oaxaca-purple/20 border-oaxaca-purple/30 dark:border-oaxaca-purple/30',
       ariaLabel: 'Orden en proceso',
     },
     SHIPPED: {
       label: 'Enviado',
       icon: <CheckCircle className="w-4 h-4" aria-hidden="true" />,
-      colors: 'text-blue-700 dark:text-blue-400',
-      bgColors: 'bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800',
+      colors: 'text-oaxaca-sky dark:text-oaxaca-sky',
+      bgColors: 'bg-oaxaca-sky-light dark:bg-oaxaca-sky/20 border-oaxaca-sky/30 dark:border-oaxaca-sky/30',
       ariaLabel: 'Orden enviada',
     },
     DELIVERED: {
@@ -239,8 +239,8 @@ export const OrderStatusBadge: React.FC<OrderStatusBadgeProps> = ({
     REFUNDED: {
       label: 'Reembolsado',
       icon: <AlertCircle className="w-4 h-4" aria-hidden="true" />,
-      colors: 'text-orange-700 dark:text-orange-400',
-      bgColors: 'bg-orange-100 dark:bg-orange-900/30 border-orange-200 dark:border-orange-800',
+      colors: 'text-oaxaca-yellow dark:text-oaxaca-yellow',
+      bgColors: 'bg-oaxaca-yellow-light dark:bg-oaxaca-yellow/20 border-oaxaca-yellow/30 dark:border-oaxaca-yellow/30',
       ariaLabel: 'Orden reembolsada',
     },
   };

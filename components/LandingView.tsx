@@ -9,13 +9,11 @@ import {
   Calendar,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import ThemeToggle from './ui/ThemeToggle';
+import GradientPlaceholder, { type PlaceholderVariant } from './ui/GradientPlaceholder';
 
-const HERO_IMAGES = [
-  '/images/guelaguetza-dancers.png',
-  '/images/guelaguetza-pineapple.png',
-  '/images/guelaguetza-stage.png',
-];
+const HERO_VARIANTS: PlaceholderVariant[] = ['dancers', 'pineapple', 'stage'];
 
 interface LandingViewProps {
   onUserSelected: (role?: string) => void;
@@ -28,7 +26,7 @@ const USER_TYPES = [
     title: 'Soy Visitante',
     description: 'Explora la Guelaguetza, descubre eventos, transporte, historias y conecta con la comunidad.',
     icon: Users,
-    color: 'from-blue-500 to-indigo-600',
+    color: 'from-oaxaca-sky to-oaxaca-purple',
     features: ['Mapa interactivo', 'Rutas de transporte', 'Eventos y calendario', 'Historias de la comunidad'],
   },
   {
@@ -37,7 +35,7 @@ const USER_TYPES = [
     title: 'Soy Vendedor',
     description: 'Vende productos artesanales, ofrece tours y experiencias, gestiona pedidos y reservas.',
     icon: ShoppingBag,
-    color: 'from-amber-500 to-orange-600',
+    color: 'from-oaxaca-yellow to-oaxaca-pink',
     features: ['Gestiona productos', 'Crea experiencias', 'Pedidos y reservas', 'Estadisticas de ventas'],
   },
   {
@@ -46,20 +44,21 @@ const USER_TYPES = [
     title: 'Administrador',
     description: 'Panel de metricas, estadisticas de uso y gestion de la plataforma.',
     icon: Shield,
-    color: 'from-purple-500 to-violet-600',
+    color: 'from-oaxaca-purple to-oaxaca-pink',
     features: ['Dashboard de metricas', 'Gestion de usuarios', 'Ver app como usuario', 'Reportes de actividad'],
   },
 ];
 
 const LandingView: React.FC<LandingViewProps> = ({ onUserSelected }) => {
   const { loginAsDemo } = useAuth();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [heroIndex, setHeroIndex] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setHeroIndex((prev) => (prev + 1) % HERO_IMAGES.length);
+      setHeroIndex((prev) => (prev + 1) % HERO_VARIANTS.length);
     }, 4000);
     return () => clearInterval(interval);
   }, []);
@@ -81,21 +80,16 @@ const LandingView: React.FC<LandingViewProps> = ({ onUserSelected }) => {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Background Image Carousel */}
-      {HERO_IMAGES.map((img, index) => (
+      {/* Background Gradient Carousel */}
+      {HERO_VARIANTS.map((variant, index) => (
         <div
-          key={img}
+          key={variant}
           className={`absolute inset-0 transition-opacity duration-1000 ${
             index === heroIndex ? 'opacity-100' : 'opacity-0'
           }`}
           aria-hidden="true"
         >
-          <img
-            src={img}
-            alt=""
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
+          <GradientPlaceholder variant={variant} className="w-full h-full" iconSize={0} />
         </div>
       ))}
 
@@ -122,13 +116,13 @@ const LandingView: React.FC<LandingViewProps> = ({ onUserSelected }) => {
 
           <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-3 sm:px-4 py-1.5 sm:py-2 mb-3 sm:mb-4">
             <Sparkles size={14} className="text-oaxaca-yellow sm:w-4 sm:h-4" aria-hidden="true" />
-            <span className="text-white text-xs sm:text-sm font-medium">Julio 21-28, 2025</span>
+            <span className="text-white text-xs sm:text-sm font-medium">{t('july_dates')}</span>
           </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-2">
             Guelaguetza Connect
           </h1>
           <p className="text-white/80 text-base sm:text-lg max-w-xs sm:max-w-md mx-auto px-2">
-            La maxima fiesta de los oaxaquenos en tu bolsillo
+            {t('welcome_message')} {t('in_your_pocket')}
           </p>
         </header>
 
@@ -136,7 +130,7 @@ const LandingView: React.FC<LandingViewProps> = ({ onUserSelected }) => {
         <main className="flex-1 px-3 sm:px-4 pb-6 sm:pb-8">
           <div className="max-w-5xl mx-auto">
             <h2 className="text-white text-center text-lg sm:text-xl font-semibold mb-4 sm:mb-6">
-              Selecciona como deseas ingresar
+              {t('select_entry')}
             </h2>
 
             {/* Responsive grid: 1 col mobile, 2 cols tablet, 3 cols desktop for better use of space */}
@@ -201,7 +195,7 @@ const LandingView: React.FC<LandingViewProps> = ({ onUserSelected }) => {
                     <div className="absolute inset-0 bg-white/80 dark:bg-gray-800/80 rounded-2xl flex items-center justify-center" role="status">
                       <div className="flex items-center gap-2">
                         <div className="w-5 h-5 border-2 border-oaxaca-purple border-t-transparent rounded-full animate-spin" aria-hidden="true" />
-                        <span className="text-oaxaca-purple font-medium text-sm sm:text-base">Ingresando...</span>
+                        <span className="text-oaxaca-purple font-medium text-sm sm:text-base">{t('entering')}</span>
                       </div>
                     </div>
                   )}
@@ -224,7 +218,7 @@ const LandingView: React.FC<LandingViewProps> = ({ onUserSelected }) => {
             </div>
           </div>
           <p className="text-white/40 text-[10px] sm:text-xs">
-            Celebrando la cultura y tradiciones de Oaxaca
+            {t('celebrating_culture')}
           </p>
         </footer>
       </div>

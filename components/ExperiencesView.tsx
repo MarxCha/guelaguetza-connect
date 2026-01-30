@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import EmptyState from './ui/EmptyState';
 import { SkeletonGrid } from './ui/LoadingSpinner';
+import GradientPlaceholder from './ui/GradientPlaceholder';
 import { useToast } from './ui/Toast';
 import {
   getExperiences,
@@ -214,11 +215,15 @@ function ExperienceCard({ experience, onClick }: ExperienceCardProps) {
     >
       {/* Image */}
       <div className="relative h-40 md:h-48">
-        <img
-          src={experience.imageUrl || `https://picsum.photos/400/200?random=${experience.id}`}
-          alt={experience.title}
-          className="w-full h-full object-cover"
-        />
+        {experience.imageUrl ? (
+          <img
+            src={experience.imageUrl}
+            alt={experience.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <GradientPlaceholder variant="event" className="w-full h-full" alt={experience.title} />
+        )}
         <div className="absolute top-3 left-3">
           <span className="px-2 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-medium text-purple-600">
             {CATEGORY_LABELS[experience.category]}

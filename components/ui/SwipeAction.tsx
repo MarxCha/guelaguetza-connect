@@ -256,7 +256,7 @@ export const deleteAction = (onClick: () => void): SwipeActionConfig => ({
 export const archiveAction = (onClick: () => void): SwipeActionConfig => ({
   icon: <Archive size={20} />,
   color: 'white',
-  bgColor: 'bg-blue-500',
+  bgColor: 'bg-oaxaca-sky',
   label: 'Archivar',
   onClick,
 });
@@ -264,7 +264,7 @@ export const archiveAction = (onClick: () => void): SwipeActionConfig => ({
 export const starAction = (onClick: () => void): SwipeActionConfig => ({
   icon: <Star size={20} />,
   color: 'white',
-  bgColor: 'bg-yellow-500',
+  bgColor: 'bg-oaxaca-yellow',
   label: 'Favorito',
   onClick,
 });

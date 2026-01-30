@@ -45,24 +45,24 @@ export const useToast = () => {
 const icons: Record<ToastType, React.ReactNode> = {
   success: <CheckCircle className="w-5 h-5 text-green-500" />,
   error: <XCircle className="w-5 h-5 text-red-500" />,
-  warning: <AlertCircle className="w-5 h-5 text-yellow-500" />,
-  info: <Info className="w-5 h-5 text-blue-500" />,
+  warning: <AlertCircle className="w-5 h-5 text-oaxaca-yellow" />,
+  info: <Info className="w-5 h-5 text-oaxaca-sky" />,
   loading: <Loader2 className="w-5 h-5 text-oaxaca-pink animate-spin" />,
 };
 
 const bgColors: Record<ToastType, string> = {
   success: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',
   error: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',
-  warning: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800',
-  info: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800',
+  warning: 'bg-oaxaca-yellow-light dark:bg-oaxaca-yellow/20 border-oaxaca-yellow/30 dark:border-oaxaca-yellow/30',
+  info: 'bg-oaxaca-sky-light dark:bg-oaxaca-sky/20 border-oaxaca-sky/30 dark:border-oaxaca-sky/30',
   loading: 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700',
 };
 
 const progressColors: Record<ToastType, string> = {
   success: 'bg-green-500',
   error: 'bg-red-500',
-  warning: 'bg-yellow-500',
-  info: 'bg-blue-500',
+  warning: 'bg-oaxaca-yellow',
+  info: 'bg-oaxaca-sky',
   loading: 'bg-oaxaca-pink',
 };
 
@@ -352,9 +352,9 @@ export const NotificationBanner: React.FC<NotificationBannerProps> = ({
   if (!isVisible) return null;
 
   const colors: Record<string, string> = {
-    info: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200',
+    info: 'bg-oaxaca-sky-light dark:bg-oaxaca-sky/20 border-oaxaca-sky/30 dark:border-oaxaca-sky/30 text-oaxaca-sky dark:text-oaxaca-sky',
     success: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200',
-    warning: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200',
+    warning: 'bg-oaxaca-yellow-light dark:bg-oaxaca-yellow/20 border-oaxaca-yellow/30 dark:border-oaxaca-yellow/30 text-oaxaca-yellow dark:text-oaxaca-yellow',
     error: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200',
   };
 

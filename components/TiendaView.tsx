@@ -20,6 +20,7 @@ import {
 import { ViewState } from '../types';
 import EmptyState from './ui/EmptyState';
 import { SkeletonGrid } from './ui/LoadingSpinner';
+import GradientPlaceholder from './ui/GradientPlaceholder';
 import PullToRefresh from './ui/PullToRefresh';
 import LoadingButton from './ui/LoadingButton';
 
@@ -266,7 +267,7 @@ interface ProductCardProps {
 }
 
 function ProductCard({ product, onClick }: ProductCardProps) {
-  const mainImage = product.images[0] || `https://picsum.photos/200/200?random=${product.id}`;
+  const mainImage = product.images[0] || '';
 
   return (
     <div
@@ -274,11 +275,15 @@ function ProductCard({ product, onClick }: ProductCardProps) {
       className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all hover:scale-[1.02]"
     >
       <div className="relative aspect-square">
-        <img
-          src={mainImage}
-          alt={product.name}
-          className="w-full h-full object-cover"
-        />
+        {mainImage ? (
+          <img
+            src={mainImage}
+            alt={product.name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <GradientPlaceholder variant="shop" className="w-full h-full" alt={product.name} />
+        )}
         {product.stock === 0 && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
             <span className="text-white font-medium">Agotado</span>

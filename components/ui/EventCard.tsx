@@ -12,6 +12,7 @@ import {
   getTicketStatusColor,
   generateGoogleCalendarLink,
 } from '../../services/events';
+import GradientPlaceholder, { categoryToVariant } from './GradientPlaceholder';
 
 interface EventCardProps {
   event: Event;
@@ -39,19 +40,7 @@ const expandLocation = (location: string): string => {
   return location;
 };
 
-// Default images by category for events without images
-const getCategoryDefaultImage = (category: string): string => {
-  const images: Record<string, string> = {
-    'DANZA': 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=400&q=80',
-    'MUSICA': 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=400&q=80',
-    'GASTRONOMIA': 'https://images.unsplash.com/photo-1613514785940-daed07799d9b?w=400&q=80',
-    'ARTESANIA': 'https://images.unsplash.com/photo-1604176424472-17cd740f74e9?w=400&q=80',
-    'CEREMONIA': 'https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=400&q=80',
-    'DESFILE': 'https://images.unsplash.com/photo-1569974507005-6dc61f97fb5c?w=400&q=80',
-    'OTRO': 'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=400&q=80',
-  };
-  return images[category] || images['OTRO'];
-};
+// Removed: getCategoryDefaultImage - now uses GradientPlaceholder
 
 const EventCard: React.FC<EventCardProps> = ({
   event,
@@ -59,7 +48,7 @@ const EventCard: React.FC<EventCardProps> = ({
   compact = false,
 }) => {
   const categoryColor = getCategoryColor(event.category);
-  const imageUrl = event.imageUrl || getCategoryDefaultImage(event.category);
+  const imageUrl = event.imageUrl;
   const ticketStatus = getTicketStatus(event);
   const statusColors = getTicketStatusColor(ticketStatus);
 
@@ -71,11 +60,11 @@ const EventCard: React.FC<EventCardProps> = ({
       >
         {/* Thumbnail Image */}
         <div className="relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden">
-          <img
-            src={imageUrl}
-            alt={event.title}
-            className="w-full h-full object-cover"
-          />
+          {imageUrl ? (
+            <img src={imageUrl} alt={event.title} className="w-full h-full object-cover" />
+          ) : (
+            <GradientPlaceholder variant={categoryToVariant(event.category)} className="w-full h-full" iconSize={24} alt={event.title} />
+          )}
           {/* Category overlay */}
           <div
             className="absolute bottom-0 left-0 right-0 py-0.5 text-center text-[10px] font-medium text-white"
@@ -83,16 +72,14 @@ const EventCard: React.FC<EventCardProps> = ({
           >
             {getCategoryIcon(event.category)} {getCategoryLabel(event.category)}
           </div>
-          {/* Official badge */}
           {event.isOfficial && (
             <div className="absolute top-1 right-1">
               <Star size={14} className="text-oaxaca-yellow fill-oaxaca-yellow drop-shadow" />
             </div>
           )}
-          {/* Sold out overlay */}
           {ticketStatus === 'SOLD_OUT' && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-              <span className="text-white text-[10px] font-bold bg-red-600 px-2 py-0.5 rounded">AGOTADO</span>
+              <span className="text-white text-[10px] font-bold bg-oaxaca-pink px-2 py-0.5 rounded">AGOTADO</span>
             </div>
           )}
         </div>
@@ -119,7 +106,7 @@ const EventCard: React.FC<EventCardProps> = ({
                   Agotado
                 </span>
               ) : ticketStatus === 'FEW_LEFT' ? (
-                <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 text-[10px] font-bold rounded-full flex items-center gap-1 animate-pulse">
+                <span className="px-2 py-0.5 bg-oaxaca-yellow-light dark:bg-oaxaca-yellow/20 text-oaxaca-yellow dark:text-oaxaca-yellow text-[10px] font-bold rounded-full flex items-center gap-1 animate-pulse">
                   <AlertCircle size={10} />
                   Últimos!
                 </span>
@@ -130,7 +117,7 @@ const EventCard: React.FC<EventCardProps> = ({
                 </span>
               )
             ) : (
-              <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] font-medium rounded-full">
+              <span className="px-2 py-0.5 bg-oaxaca-sky-light dark:bg-oaxaca-sky/20 text-oaxaca-sky dark:text-oaxaca-sky text-[10px] font-medium rounded-full">
                 Entrada libre
               </span>
             )}
@@ -145,13 +132,13 @@ const EventCard: React.FC<EventCardProps> = ({
       onClick={onClick}
       className="w-full bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-md transition-all overflow-hidden text-left"
     >
-      {/* Image - Always show image now */}
+      {/* Image */}
       <div className="relative h-40 w-full">
-        <img
-          src={imageUrl}
-          alt={event.title}
-          className="w-full h-full object-cover"
-        />
+        {imageUrl ? (
+          <img src={imageUrl} alt={event.title} className="w-full h-full object-cover" />
+        ) : (
+          <GradientPlaceholder variant={categoryToVariant(event.category)} className="w-full h-full" iconSize={36} alt={event.title} />
+        )}
         {/* Category badge */}
         <div
           className="absolute top-3 left-3 px-3 py-1 rounded-full text-white text-xs font-medium"
@@ -217,7 +204,7 @@ const EventCard: React.FC<EventCardProps> = ({
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="flex items-center gap-1 px-2 py-1 text-xs text-gray-500 hover:text-oaxaca-purple hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-full transition"
+              className="flex items-center gap-1 px-2 py-1 text-xs text-gray-500 hover:text-oaxaca-purple hover:bg-oaxaca-purple-light dark:hover:bg-oaxaca-purple/20 rounded-full transition"
               title="Añadir a Google Calendar"
             >
               <CalendarPlus size={14} />
@@ -236,14 +223,14 @@ const EventCard: React.FC<EventCardProps> = ({
               </span>
             ) : (
               <span className={`px-3 py-1.5 text-white text-xs font-bold rounded-full flex items-center gap-1 shadow-sm ${
-                ticketStatus === 'FEW_LEFT' ? 'bg-amber-500 hover:bg-amber-600 animate-pulse' : 'bg-oaxaca-pink hover:bg-oaxaca-pink/90'
+                ticketStatus === 'FEW_LEFT' ? 'bg-oaxaca-yellow hover:bg-oaxaca-yellow/90 animate-pulse' : 'bg-oaxaca-pink hover:bg-oaxaca-pink/90'
               }`}>
                 <Ticket size={12} />
                 {ticketStatus === 'FEW_LEFT' ? 'Últimos boletos!' : 'Obtener boletos'}
               </span>
             )
           ) : (
-            <span className="px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-medium rounded-full">
+            <span className="px-3 py-1.5 bg-oaxaca-sky-light dark:bg-oaxaca-sky/20 text-oaxaca-sky dark:text-oaxaca-sky text-xs font-medium rounded-full">
               Entrada libre
             </span>
           )}

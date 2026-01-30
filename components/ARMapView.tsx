@@ -16,6 +16,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap, CircleMarker } from 're
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import LoadingSpinner from './ui/LoadingSpinner';
+import GradientPlaceholder from './ui/GradientPlaceholder';
 import {
   getNearbyPOIs,
   PointOfInterest,
@@ -275,11 +276,15 @@ export default function ARMapView({ onNavigate, onBack }: ARMapViewProps) {
             </button>
 
             <div className="flex gap-3">
-              <img
-                src={selectedPOI.imageUrl || `https://picsum.photos/100/100?random=${selectedPOI.id}`}
-                alt={selectedPOI.name}
-                className="w-20 h-20 rounded-lg object-cover"
-              />
+              {selectedPOI.imageUrl ? (
+                <img
+                  src={selectedPOI.imageUrl}
+                  alt={selectedPOI.name}
+                  className="w-20 h-20 rounded-lg object-cover"
+                />
+              ) : (
+                <GradientPlaceholder variant="event" className="w-20 h-20 rounded-lg" alt={selectedPOI.name} />
+              )}
               <div className="flex-1">
                 <span
                   className="text-xs font-medium px-2 py-0.5 rounded-full"
@@ -356,11 +361,15 @@ function POIListCard({ poi, onClick }: POIListCardProps) {
       onClick={onClick}
       className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden flex cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all"
     >
-      <img
-        src={poi.imageUrl || `https://picsum.photos/100/100?random=${poi.id}`}
-        alt={poi.name}
-        className="w-24 md:w-28 h-24 md:h-28 object-cover"
-      />
+      {poi.imageUrl ? (
+        <img
+          src={poi.imageUrl}
+          alt={poi.name}
+          className="w-24 md:w-28 h-24 md:h-28 object-cover"
+        />
+      ) : (
+        <GradientPlaceholder variant="event" className="w-24 md:w-28 h-24 md:h-28" alt={poi.name} />
+      )}
       <div className="flex-1 p-3 md:p-4">
         <span
           className="text-xs font-medium px-2 py-0.5 rounded-full"

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import LoadingSpinner from './ui/LoadingSpinner';
 import LoadingButton from './ui/LoadingButton';
+import GradientPlaceholder from './ui/GradientPlaceholder';
 import { useToast } from './ui/Toast';
 import PaymentErrorModal from './ui/PaymentErrorModal';
 import {
@@ -338,12 +339,16 @@ function BookingCard({ booking, onCancel, onReview, onRetryPayment, onClick }: B
           }
         }}
       >
-        <img
-          src={experience.imageUrl || `https://picsum.photos/400/200?random=${experience.id}`}
-          alt=""
-          className="w-full h-full object-cover"
-          loading="lazy"
-        />
+        {experience.imageUrl ? (
+          <img
+            src={experience.imageUrl}
+            alt=""
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <GradientPlaceholder variant="event" className="w-full h-full" alt={experience.title} />
+        )}
         <div className="absolute top-2 sm:top-3 right-2 sm:right-3 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm rounded-full p-0.5 sm:p-1">
           <BookingStatusBadge status={booking.status} size="sm" />
         </div>

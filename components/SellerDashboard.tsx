@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { ViewState } from '../types';
 import { useAuth } from '../contexts/AuthContext';
+import GradientPlaceholder from './ui/GradientPlaceholder';
 
 interface SellerDashboardProps {
   onBack: () => void;
@@ -43,7 +44,7 @@ const MOCK_SELLER_PRODUCTS = [
     stock: 3,
     sales: 47,
     views: 1234,
-    image: 'https://images.unsplash.com/photo-1604176424472-17cd740f74e9?w=200',
+    image: '',
     category: 'ARTESANIA',
     rating: 4.9,
   },
@@ -54,7 +55,7 @@ const MOCK_SELLER_PRODUCTS = [
     stock: 8,
     sales: 89,
     views: 2456,
-    image: 'https://images.unsplash.com/photo-1569529465841-dfecdab7503b?w=200',
+    image: '',
     category: 'MEZCAL',
     rating: 5.0,
   },
@@ -65,7 +66,7 @@ const MOCK_SELLER_PRODUCTS = [
     stock: 2,
     sales: 12,
     views: 567,
-    image: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=200',
+    image: '',
     category: 'TEXTIL',
     rating: 4.8,
   },
@@ -76,7 +77,7 @@ const MOCK_SELLER_PRODUCTS = [
     stock: 6,
     sales: 34,
     views: 890,
-    image: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=200',
+    image: '',
     category: 'CERAMICA',
     rating: 4.7,
   },
@@ -87,7 +88,7 @@ const MOCK_SELLER_PRODUCTS = [
     stock: 25,
     sales: 156,
     views: 3421,
-    image: 'https://images.unsplash.com/photo-1481391319762-47dff72954d9?w=200',
+    image: '',
     category: 'GASTRONOMIA',
     rating: 4.9,
   },
@@ -98,7 +99,7 @@ const MOCK_SELLER_PRODUCTS = [
     stock: 1,
     sales: 8,
     views: 445,
-    image: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=200',
+    image: '',
     category: 'TEXTIL',
     rating: 5.0,
   },
@@ -109,7 +110,7 @@ const MOCK_SELLER_PRODUCTS = [
     stock: 15,
     sales: 203,
     views: 4567,
-    image: 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=200',
+    image: '',
     category: 'MEZCAL',
     rating: 4.6,
   },
@@ -120,7 +121,7 @@ const MOCK_SELLER_PRODUCTS = [
     stock: 2,
     sales: 5,
     views: 234,
-    image: 'https://images.unsplash.com/photo-1600166898405-da9535204843?w=200',
+    image: '',
     category: 'TEXTIL',
     rating: 5.0,
   },
@@ -140,7 +141,7 @@ const MOCK_SELLER_EXPERIENCES = [
     earnings: 9000,
     pricePerPerson: 1500,
     duration: '6 horas',
-    image: 'https://images.unsplash.com/photo-1569529465841-dfecdab7503b?w=100',
+    image: '',
   },
   {
     id: '2',
@@ -154,7 +155,7 @@ const MOCK_SELLER_EXPERIENCES = [
     earnings: 3800,
     pricePerPerson: 950,
     duration: '4 horas',
-    image: 'https://images.unsplash.com/photo-1604176424472-17cd740f74e9?w=100',
+    image: '',
   },
   {
     id: '3',
@@ -168,7 +169,7 @@ const MOCK_SELLER_EXPERIENCES = [
     earnings: 4750,
     pricePerPerson: 950,
     duration: '5 horas',
-    image: 'https://images.unsplash.com/photo-1613514785940-daed07799d9b?w=100',
+    image: '',
   },
   {
     id: '4',
@@ -182,7 +183,7 @@ const MOCK_SELLER_EXPERIENCES = [
     earnings: 12000,
     pricePerPerson: 1500,
     duration: '10 horas',
-    image: 'https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?w=100',
+    image: '',
   },
   {
     id: '5',
@@ -196,7 +197,7 @@ const MOCK_SELLER_EXPERIENCES = [
     earnings: 2400,
     pricePerPerson: 800,
     duration: '5 horas',
-    image: 'https://images.unsplash.com/photo-1600166898405-da9535204843?w=100',
+    image: '',
   },
 ];
 
@@ -207,7 +208,7 @@ const MOCK_ORDERS = [
     type: 'product' as const,
     item: 'Alebrije Jaguar Multicolor',
     customer: 'Sarah Johnson',
-    avatar: 'https://picsum.photos/seed/sarah/100',
+    avatar: 'sarah/100',
     amount: 1850,
     status: 'pending' as const,
     date: 'Hace 15 min',
@@ -218,7 +219,7 @@ const MOCK_ORDERS = [
     type: 'experience' as const,
     item: 'Ruta del Mezcal',
     customer: 'Michael Chen',
-    avatar: 'https://picsum.photos/seed/michael/100',
+    avatar: 'michael/100',
     amount: 4500,
     guests: 3,
     status: 'confirmed' as const,
@@ -230,7 +231,7 @@ const MOCK_ORDERS = [
     type: 'product' as const,
     item: 'Mezcal Tobala Reposado x2',
     customer: 'Ana Martinez',
-    avatar: 'https://picsum.photos/seed/ana2/100',
+    avatar: 'ana2/100',
     amount: 2400,
     status: 'shipped' as const,
     date: 'Ayer 18:00',
@@ -241,7 +242,7 @@ const MOCK_ORDERS = [
     type: 'experience' as const,
     item: 'Taller de Alebrijes',
     customer: 'Emma Wilson',
-    avatar: 'https://picsum.photos/seed/emma2/100',
+    avatar: 'emma2/100',
     amount: 1900,
     guests: 2,
     status: 'pending' as const,
@@ -253,7 +254,7 @@ const MOCK_ORDERS = [
     type: 'product' as const,
     item: 'Chocolate de Metate 1kg x5',
     customer: 'Roberto Sanchez',
-    avatar: 'https://picsum.photos/seed/roberto/100',
+    avatar: 'roberto/100',
     amount: 1400,
     status: 'shipped' as const,
     date: 'Hace 2 dias',
@@ -264,7 +265,7 @@ const MOCK_ORDERS = [
     type: 'experience' as const,
     item: 'Clase de Cocina Oaxaquena',
     customer: 'Lisa Thompson',
-    avatar: 'https://picsum.photos/seed/lisa/100',
+    avatar: 'lisa/100',
     amount: 4750,
     guests: 5,
     status: 'confirmed' as const,
@@ -276,7 +277,7 @@ const MOCK_ORDERS = [
     type: 'product' as const,
     item: 'Huipil Bordado a Mano',
     customer: 'Jennifer Davis',
-    avatar: 'https://picsum.photos/seed/jennifer/100',
+    avatar: 'jennifer/100',
     amount: 4200,
     status: 'pending' as const,
     date: 'Hace 1 hora',
@@ -287,7 +288,7 @@ const MOCK_ORDERS = [
     type: 'experience' as const,
     item: 'Tour Hierve el Agua',
     customer: 'David Kim',
-    avatar: 'https://picsum.photos/seed/david/100',
+    avatar: 'david/100',
     amount: 3000,
     guests: 2,
     status: 'confirmed' as const,
@@ -297,10 +298,10 @@ const MOCK_ORDERS = [
 ];
 
 const QUICK_ACTIONS = [
-  { icon: Plus, label: 'Nuevo Producto', color: 'bg-amber-500' },
-  { icon: Ticket, label: 'Nueva Experiencia', color: 'bg-purple-500' },
-  { icon: Calendar, label: 'Mi Calendario', color: 'bg-blue-500' },
-  { icon: Camera, label: 'Subir Fotos', color: 'bg-pink-500' },
+  { icon: Plus, label: 'Nuevo Producto', color: 'bg-oaxaca-yellow' },
+  { icon: Ticket, label: 'Nueva Experiencia', color: 'bg-oaxaca-purple' },
+  { icon: Calendar, label: 'Mi Calendario', color: 'bg-oaxaca-sky' },
+  { icon: Camera, label: 'Subir Fotos', color: 'bg-oaxaca-pink' },
 ];
 
 // Categories for filtering
@@ -335,7 +336,7 @@ const SellerDashboard: React.FC<SellerDashboardProps> = ({ onBack, onNavigate })
       case 'pending':
         return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
       case 'shipped':
-        return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+        return 'bg-oaxaca-sky-light text-oaxaca-sky dark:bg-oaxaca-sky/20 dark:text-oaxaca-sky';
       default:
         return 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
     }
@@ -353,7 +354,7 @@ const SellerDashboard: React.FC<SellerDashboardProps> = ({ onBack, onNavigate })
   return (
     <div className="h-full bg-gray-50 dark:bg-gray-950 overflow-y-auto pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500 text-white">
+      <div className="bg-gradient-to-br from-oaxaca-yellow via-oaxaca-pink to-oaxaca-purple text-white">
         <div className="px-4 py-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -425,7 +426,7 @@ const SellerDashboard: React.FC<SellerDashboardProps> = ({ onBack, onNavigate })
                 onClick={() => setActiveTab(tab.key)}
                 className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition whitespace-nowrap ${
                   activeTab === tab.key
-                    ? 'bg-white text-orange-600'
+                    ? 'bg-white text-oaxaca-pink'
                     : 'bg-white/20 hover:bg-white/30'
                 }`}
               >
@@ -465,7 +466,7 @@ const SellerDashboard: React.FC<SellerDashboardProps> = ({ onBack, onNavigate })
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="font-semibold text-gray-900 dark:text-white">Mis Productos</h2>
-              <button className="text-sm text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1">
+              <button className="text-sm text-oaxaca-yellow dark:text-oaxaca-yellow font-medium flex items-center gap-1">
                 <Plus size={16} /> Agregar
               </button>
             </div>
@@ -478,7 +479,7 @@ const SellerDashboard: React.FC<SellerDashboardProps> = ({ onBack, onNavigate })
                   onClick={() => setProductFilter(cat.key)}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition ${
                     productFilter === cat.key
-                      ? 'bg-amber-500 text-white'
+                      ? 'bg-oaxaca-yellow text-white'
                       : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                   }`}
                 >
@@ -495,11 +496,15 @@ const SellerDashboard: React.FC<SellerDashboardProps> = ({ onBack, onNavigate })
                 className="bg-white dark:bg-gray-800 rounded-xl p-3 shadow-sm flex gap-3"
               >
                 <div className="relative">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-20 h-20 rounded-lg object-cover"
-                  />
+                  {product.image ? (
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-20 h-20 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <GradientPlaceholder variant="shop" className="w-20 h-20 rounded-lg" alt={product.name} />
+                  )}
                   {product.stock <= 3 && (
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-full">
                       Pocas!
@@ -516,7 +521,7 @@ const SellerDashboard: React.FC<SellerDashboardProps> = ({ onBack, onNavigate })
                       <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{product.rating}</span>
                     </div>
                   </div>
-                  <p className="text-lg font-bold text-amber-600 dark:text-amber-400">
+                  <p className="text-lg font-bold text-oaxaca-yellow dark:text-oaxaca-yellow">
                     ${product.price.toLocaleString()}
                   </p>
                   <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -552,7 +557,7 @@ const SellerDashboard: React.FC<SellerDashboardProps> = ({ onBack, onNavigate })
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="font-semibold text-gray-900 dark:text-white">Mis Experiencias</h2>
-              <button className="text-sm text-purple-600 dark:text-purple-400 font-medium flex items-center gap-1">
+              <button className="text-sm text-oaxaca-purple dark:text-oaxaca-pink font-medium flex items-center gap-1">
                 <Plus size={16} /> Nueva
               </button>
             </div>
@@ -564,11 +569,15 @@ const SellerDashboard: React.FC<SellerDashboardProps> = ({ onBack, onNavigate })
               >
                 {/* Header with image */}
                 <div className="relative h-32">
-                  <img
-                    src={exp.image}
-                    alt={exp.title}
-                    className="w-full h-full object-cover"
-                  />
+                  {exp.image ? (
+                    <img
+                      src={exp.image}
+                      alt={exp.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <GradientPlaceholder variant="event" className="w-full h-full" alt={exp.title} />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-3">
                     <h3 className="font-semibold text-white text-sm leading-tight">{exp.title}</h3>
@@ -624,7 +633,7 @@ const SellerDashboard: React.FC<SellerDashboardProps> = ({ onBack, onNavigate })
                       <button className="p-2 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition">
                         <MessageCircle size={14} className="text-gray-600 dark:text-gray-300" />
                       </button>
-                      <button className="p-2 bg-purple-500 rounded-full hover:bg-purple-600 transition">
+                      <button className="p-2 bg-oaxaca-purple rounded-full hover:bg-oaxaca-purple/90 transition">
                         <Edit size={14} className="text-white" />
                       </button>
                     </div>
@@ -649,7 +658,7 @@ const SellerDashboard: React.FC<SellerDashboardProps> = ({ onBack, onNavigate })
 
             {/* Order Type Filter Pills */}
             <div className="flex gap-2">
-              <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-amber-500 text-white">
+              <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-oaxaca-yellow text-white">
                 Todos ({MOCK_ORDERS.length})
               </span>
               <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
@@ -665,14 +674,18 @@ const SellerDashboard: React.FC<SellerDashboardProps> = ({ onBack, onNavigate })
                 key={order.id}
                 className={`bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm ${
                   order.status === 'pending' ? 'border-l-4 border-yellow-500' : ''
-                } ${order.status === 'shipped' ? 'border-l-4 border-blue-500' : ''}`}
+                } ${order.status === 'shipped' ? 'border-l-4 border-oaxaca-sky' : ''}`}
               >
                 <div className="flex items-start gap-3">
-                  <img
-                    src={order.avatar}
-                    alt={order.customer}
-                    className="w-12 h-12 rounded-full object-cover border-2 border-gray-100 dark:border-gray-700"
-                  />
+                  {order.avatar ? (
+                    <img
+                      src={order.avatar}
+                      alt={order.customer}
+                      className="w-12 h-12 rounded-full object-cover border-2 border-gray-100 dark:border-gray-700"
+                    />
+                  ) : (
+                    <GradientPlaceholder variant="community" className="w-12 h-12 rounded-full border-2 border-gray-100 dark:border-gray-700" alt={order.customer} />
+                  )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <div>
@@ -689,14 +702,14 @@ const SellerDashboard: React.FC<SellerDashboardProps> = ({ onBack, onNavigate })
                     <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                       {order.type === 'product' ? (
                         <div className="flex items-center gap-2 text-sm">
-                          <Package size={14} className="text-amber-500" />
+                          <Package size={14} className="text-oaxaca-yellow" />
                           <span className="text-gray-700 dark:text-gray-200">{order.item}</span>
                         </div>
                       ) : (
                         <div className="flex items-center gap-2 text-sm">
-                          <Ticket size={14} className="text-purple-500" />
+                          <Ticket size={14} className="text-oaxaca-purple" />
                           <span className="text-gray-700 dark:text-gray-200">{order.item}</span>
-                          <span className="text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-1.5 py-0.5 rounded">
+                          <span className="text-xs bg-oaxaca-purple-light dark:bg-oaxaca-purple/20 text-oaxaca-purple dark:text-oaxaca-pink px-1.5 py-0.5 rounded">
                             {order.guests} persona{order.guests !== 1 ? 's' : ''}
                           </span>
                         </div>
@@ -711,7 +724,7 @@ const SellerDashboard: React.FC<SellerDashboardProps> = ({ onBack, onNavigate })
 
                     <div className="flex items-center justify-between mt-3 pt-2 border-t dark:border-gray-700">
                       <div className="flex items-center gap-3">
-                        <span className="text-sm font-bold text-amber-600 dark:text-amber-400">
+                        <span className="text-sm font-bold text-oaxaca-yellow dark:text-oaxaca-yellow">
                           ${order.amount.toLocaleString()}
                         </span>
                         <span className="text-xs text-gray-400">{order.date}</span>
@@ -721,7 +734,7 @@ const SellerDashboard: React.FC<SellerDashboardProps> = ({ onBack, onNavigate })
                           <MessageCircle size={12} className="text-gray-600 dark:text-gray-300" />
                         </button>
                         {order.status === 'pending' && order.type === 'product' && (
-                          <button className="p-1.5 bg-blue-500 rounded-lg hover:bg-blue-600 transition flex items-center gap-1">
+                          <button className="p-1.5 bg-oaxaca-sky rounded-lg hover:bg-oaxaca-sky/90 transition flex items-center gap-1">
                             <Send size={12} className="text-white" />
                             <span className="text-[10px] text-white font-medium pr-1">Enviar</span>
                           </button>
@@ -733,7 +746,7 @@ const SellerDashboard: React.FC<SellerDashboardProps> = ({ onBack, onNavigate })
                           </button>
                         )}
                         {order.status === 'shipped' && (
-                          <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] rounded-lg flex items-center gap-1">
+                          <span className="px-2 py-1 bg-oaxaca-sky-light dark:bg-oaxaca-sky/20 text-oaxaca-sky dark:text-oaxaca-sky text-[10px] rounded-lg flex items-center gap-1">
                             <Send size={10} />
                             En camino
                           </span>
@@ -767,7 +780,7 @@ const SellerDashboard: React.FC<SellerDashboardProps> = ({ onBack, onNavigate })
             {/* Monthly Stats Grid */}
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm text-center">
-                <Package size={20} className="mx-auto mb-1 text-amber-500" />
+                <Package size={20} className="mx-auto mb-1 text-oaxaca-yellow" />
                 <div className="text-2xl font-bold text-gray-900 dark:text-white">{totalSales}</div>
                 <div className="text-xs text-gray-500">Productos vendidos</div>
                 <div className="text-[10px] text-green-500 flex items-center justify-center gap-1 mt-1">
@@ -776,7 +789,7 @@ const SellerDashboard: React.FC<SellerDashboardProps> = ({ onBack, onNavigate })
                 </div>
               </div>
               <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm text-center">
-                <Ticket size={20} className="mx-auto mb-1 text-purple-500" />
+                <Ticket size={20} className="mx-auto mb-1 text-oaxaca-purple" />
                 <div className="text-2xl font-bold text-gray-900 dark:text-white">47</div>
                 <div className="text-xs text-gray-500">Experiencias</div>
                 <div className="text-[10px] text-green-500 flex items-center justify-center gap-1 mt-1">
@@ -785,7 +798,7 @@ const SellerDashboard: React.FC<SellerDashboardProps> = ({ onBack, onNavigate })
                 </div>
               </div>
               <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm text-center">
-                <Users size={20} className="mx-auto mb-1 text-blue-500" />
+                <Users size={20} className="mx-auto mb-1 text-oaxaca-sky" />
                 <div className="text-2xl font-bold text-gray-900 dark:text-white">284</div>
                 <div className="text-xs text-gray-500">Clientes atendidos</div>
                 <div className="text-[10px] text-green-500 flex items-center justify-center gap-1 mt-1">
@@ -794,7 +807,7 @@ const SellerDashboard: React.FC<SellerDashboardProps> = ({ onBack, onNavigate })
                 </div>
               </div>
               <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm text-center">
-                <Eye size={20} className="mx-auto mb-1 text-pink-500" />
+                <Eye size={20} className="mx-auto mb-1 text-oaxaca-pink" />
                 <div className="text-2xl font-bold text-gray-900 dark:text-white">2.3k</div>
                 <div className="text-xs text-gray-500">Vistas totales</div>
                 <div className="text-[10px] text-green-500 flex items-center justify-center gap-1 mt-1">
@@ -805,7 +818,7 @@ const SellerDashboard: React.FC<SellerDashboardProps> = ({ onBack, onNavigate })
             </div>
 
             {/* Monthly Earnings */}
-            <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-4 text-white">
+            <div className="bg-gradient-to-r from-oaxaca-yellow to-oaxaca-pink rounded-xl p-4 text-white">
               <div className="text-sm text-white/80 mb-1">Ganancias del mes</div>
               <div className="text-3xl font-bold">${monthlyEarnings.toLocaleString()}</div>
               <div className="flex items-center gap-4 mt-2 text-sm">

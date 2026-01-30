@@ -17,6 +17,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import LoadingSpinner from './ui/LoadingSpinner';
+import GradientPlaceholder from './ui/GradientPlaceholder';
 import { useToast } from './ui/Toast';
 import { BookingConflictModal } from './ui/ConcurrencyErrorModal';
 import {
@@ -192,12 +193,16 @@ export default function ExperienceDetailView({
     <div className="flex flex-col h-full bg-white dark:bg-gray-900">
       {/* Header Image */}
       <div className="relative h-48 sm:h-56 md:h-64 lg:h-72">
-        <img
-          src={experience.imageUrl || `https://picsum.photos/800/400?random=${experienceId}`}
-          alt=""
-          className="w-full h-full object-cover"
-          loading="eager"
-        />
+        {experience.imageUrl ? (
+          <img
+            src={experience.imageUrl}
+            alt=""
+            className="w-full h-full object-cover"
+            loading="eager"
+          />
+        ) : (
+          <GradientPlaceholder variant="event" className="w-full h-full" alt={experience.title} />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30" aria-hidden="true" />
 
         {/* Navigation */}
@@ -228,7 +233,7 @@ export default function ExperienceDetailView({
 
         {/* Category badge */}
         <div className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4">
-          <span className="px-2.5 sm:px-3 py-1 bg-purple-600 text-white text-xs sm:text-sm font-medium rounded-full">
+          <span className="px-2.5 sm:px-3 py-1 bg-oaxaca-purple text-white text-xs sm:text-sm font-medium rounded-full">
             {CATEGORY_LABELS[experience.category]}
           </span>
         </div>
@@ -252,7 +257,7 @@ export default function ExperienceDetailView({
               </div>
             </div>
             <div className="text-left sm:text-right">
-              <p className="text-xl sm:text-2xl font-bold text-purple-600 dark:text-purple-400">{formatPrice(experience.price)}</p>
+              <p className="text-xl sm:text-2xl font-bold text-oaxaca-purple dark:text-oaxaca-pink">{formatPrice(experience.price)}</p>
               <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">por persona</p>
             </div>
           </div>
@@ -279,7 +284,7 @@ export default function ExperienceDetailView({
             <div>
               <p className="font-medium text-gray-900 dark:text-white text-sm sm:text-base">{experience.location}</p>
               {experience.latitude && experience.longitude && (
-                <button className="text-purple-600 dark:text-purple-400 text-xs sm:text-sm flex items-center gap-1 mt-1 hover:underline focus-visible:ring-2 focus-visible:ring-purple-500 rounded">
+                <button className="text-oaxaca-purple dark:text-oaxaca-pink text-xs sm:text-sm flex items-center gap-1 mt-1 hover:underline focus-visible:ring-2 focus-visible:ring-oaxaca-purple rounded">
                   Ver en mapa
                   <ChevronRight className="w-3 sm:w-4 h-3 sm:h-4" aria-hidden="true" />
                 </button>
@@ -301,7 +306,7 @@ export default function ExperienceDetailView({
               <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Anfitrion</p>
             </div>
             <button
-              className="p-2 border border-gray-200 dark:border-gray-600 rounded-full min-w-[40px] sm:min-w-[44px] min-h-[40px] sm:min-h-[44px] flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors focus-visible:ring-2 focus-visible:ring-purple-500"
+              className="p-2 border border-gray-200 dark:border-gray-600 rounded-full min-w-[40px] sm:min-w-[44px] min-h-[40px] sm:min-h-[44px] flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors focus-visible:ring-2 focus-visible:ring-oaxaca-purple"
               aria-label="Enviar mensaje al anfitrion"
             >
               <MessageSquare className="w-4 sm:w-5 h-4 sm:h-5 text-gray-600 dark:text-gray-400" />
@@ -315,9 +320,9 @@ export default function ExperienceDetailView({
               role="tab"
               aria-selected={activeTab === 'info'}
               aria-controls="tab-panel-info"
-              className={`flex-1 py-2.5 sm:py-3 text-center font-medium border-b-2 transition-colors text-sm sm:text-base min-h-[44px] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-purple-500 ${
+              className={`flex-1 py-2.5 sm:py-3 text-center font-medium border-b-2 transition-colors text-sm sm:text-base min-h-[44px] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-oaxaca-pink ${
                 activeTab === 'info'
-                  ? 'border-purple-600 text-purple-600 dark:text-purple-400'
+                  ? 'border-oaxaca-purple text-oaxaca-purple dark:text-oaxaca-pink'
                   : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
               }`}
             >
@@ -328,9 +333,9 @@ export default function ExperienceDetailView({
               role="tab"
               aria-selected={activeTab === 'reviews'}
               aria-controls="tab-panel-reviews"
-              className={`flex-1 py-2.5 sm:py-3 text-center font-medium border-b-2 transition-colors text-sm sm:text-base min-h-[44px] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-purple-500 ${
+              className={`flex-1 py-2.5 sm:py-3 text-center font-medium border-b-2 transition-colors text-sm sm:text-base min-h-[44px] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-oaxaca-pink ${
                 activeTab === 'reviews'
-                  ? 'border-purple-600 text-purple-600 dark:text-purple-400'
+                  ? 'border-oaxaca-purple text-oaxaca-purple dark:text-oaxaca-pink'
                   : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
               }`}
             >
@@ -407,7 +412,7 @@ export default function ExperienceDetailView({
         <div className="max-w-4xl mx-auto">
           <button
             onClick={() => setShowBooking(true)}
-            className="w-full py-3 sm:py-4 bg-purple-600 text-white rounded-lg font-medium min-h-[48px] hover:bg-purple-700 active:scale-[0.98] transition-all focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 text-sm sm:text-base"
+            className="w-full py-3 sm:py-4 bg-oaxaca-purple text-white rounded-lg font-medium min-h-[48px] hover:bg-oaxaca-purple/90 active:scale-[0.98] transition-all focus-visible:ring-2 focus-visible:ring-oaxaca-purple focus-visible:ring-offset-2 text-sm sm:text-base"
           >
             Reservar ahora
           </button>
@@ -428,7 +433,7 @@ export default function ExperienceDetailView({
                 <h2 id="booking-modal-title" className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">Reservar experiencia</h2>
                 <button
                   onClick={() => setShowBooking(false)}
-                  className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-purple-500"
+                  className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-oaxaca-purple"
                   aria-label="Cerrar modal"
                 >
                   <ChevronLeft className="w-5 sm:w-6 h-5 sm:h-6 text-gray-600 dark:text-gray-300" />
@@ -449,7 +454,7 @@ export default function ExperienceDetailView({
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
                   min={new Date().toISOString().split('T')[0]}
-                  className="w-full p-2.5 sm:p-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm sm:text-base min-h-[44px] focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full p-2.5 sm:p-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm sm:text-base min-h-[44px] focus:ring-2 focus:ring-oaxaca-purple focus:border-transparent"
                 />
               </div>
 
@@ -463,7 +468,7 @@ export default function ExperienceDetailView({
                   <button
                     onClick={loadTimeSlots}
                     disabled={slotsLoading}
-                    className="text-xs sm:text-sm text-purple-600 dark:text-purple-400 flex items-center gap-1 hover:text-purple-700 dark:hover:text-purple-300 disabled:opacity-50 min-h-[36px] px-2 focus-visible:ring-2 focus-visible:ring-purple-500 rounded"
+                    className="text-xs sm:text-sm text-oaxaca-purple dark:text-oaxaca-pink flex items-center gap-1 hover:text-purple-700 dark:hover:text-purple-300 disabled:opacity-50 min-h-[36px] px-2 focus-visible:ring-2 focus-visible:ring-oaxaca-purple rounded"
                     aria-label="Actualizar horarios disponibles"
                   >
                     <RefreshCw className={`w-3.5 sm:w-4 h-3.5 sm:h-4 ${slotsLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
@@ -473,7 +478,7 @@ export default function ExperienceDetailView({
                 {slotsLoading ? (
                   <div className="flex items-center justify-center py-6 sm:py-8" role="status">
                     <div className="flex flex-col items-center gap-2">
-                      <RefreshCw className="w-5 sm:w-6 h-5 sm:h-6 text-purple-500 animate-spin" aria-hidden="true" />
+                      <RefreshCw className="w-5 sm:w-6 h-5 sm:h-6 text-oaxaca-purple animate-spin" aria-hidden="true" />
                       <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Cargando horarios...</span>
                     </div>
                   </div>
@@ -489,9 +494,9 @@ export default function ExperienceDetailView({
                         onClick={() => setSelectedSlot(slot)}
                         role="radio"
                         aria-checked={selectedSlot?.id === slot.id}
-                        className={`p-2 sm:p-3 border rounded-lg text-center transition-all min-h-[56px] focus-visible:ring-2 focus-visible:ring-purple-500 ${
+                        className={`p-2 sm:p-3 border rounded-lg text-center transition-all min-h-[56px] focus-visible:ring-2 focus-visible:ring-oaxaca-purple ${
                           selectedSlot?.id === slot.id
-                            ? 'border-purple-600 bg-purple-50 dark:bg-purple-900/30 dark:border-purple-500'
+                            ? 'border-oaxaca-purple bg-oaxaca-purple-light dark:bg-oaxaca-purple/20 dark:border-oaxaca-purple'
                             : 'border-gray-200 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
                         }`}
                       >
@@ -514,7 +519,7 @@ export default function ExperienceDetailView({
                 <div className="flex items-center justify-center gap-3 sm:gap-4">
                   <button
                     onClick={() => setGuestCount(Math.max(1, guestCount - 1))}
-                    className="p-2 border border-gray-200 dark:border-gray-600 rounded-full min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:ring-2 focus-visible:ring-purple-500"
+                    className="p-2 border border-gray-200 dark:border-gray-600 rounded-full min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:ring-2 focus-visible:ring-oaxaca-purple"
                     disabled={guestCount <= 1}
                     aria-label="Reducir numero de personas"
                   >
@@ -530,7 +535,7 @@ export default function ExperienceDetailView({
                         )
                       )
                     }
-                    className="p-2 border border-gray-200 dark:border-gray-600 rounded-full min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:ring-2 focus-visible:ring-purple-500"
+                    className="p-2 border border-gray-200 dark:border-gray-600 rounded-full min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:ring-2 focus-visible:ring-oaxaca-purple"
                     disabled={guestCount >= (selectedSlot?.availableSpots || experience.maxCapacity)}
                     aria-label="Aumentar numero de personas"
                   >
@@ -549,7 +554,7 @@ export default function ExperienceDetailView({
                   value={specialRequests}
                   onChange={(e) => setSpecialRequests(e.target.value)}
                   placeholder="Alergias, restricciones, etc."
-                  className="w-full p-2.5 sm:p-3 border border-gray-200 dark:border-gray-600 rounded-lg resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm sm:text-base focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full p-2.5 sm:p-3 border border-gray-200 dark:border-gray-600 rounded-lg resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm sm:text-base focus:ring-2 focus:ring-oaxaca-purple focus:border-transparent"
                   rows={3}
                 />
               </div>
@@ -564,7 +569,7 @@ export default function ExperienceDetailView({
                 </div>
                 <div className="flex justify-between font-bold text-base sm:text-lg pt-2 border-t border-gray-200 dark:border-gray-600">
                   <span className="text-gray-900 dark:text-white">Total</span>
-                  <span className="text-purple-600 dark:text-purple-400">{formatPrice(totalPrice)}</span>
+                  <span className="text-oaxaca-purple dark:text-oaxaca-pink">{formatPrice(totalPrice)}</span>
                 </div>
               </div>
 
@@ -572,7 +577,7 @@ export default function ExperienceDetailView({
               <button
                 onClick={handleBook}
                 disabled={!selectedSlot || bookingLoading}
-                className="w-full py-3 sm:py-4 bg-purple-600 text-white rounded-lg font-medium disabled:opacity-50 min-h-[48px] hover:bg-purple-700 active:scale-[0.98] transition-all focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 text-sm sm:text-base"
+                className="w-full py-3 sm:py-4 bg-oaxaca-purple text-white rounded-lg font-medium disabled:opacity-50 min-h-[48px] hover:bg-oaxaca-purple/90 active:scale-[0.98] transition-all focus-visible:ring-2 focus-visible:ring-oaxaca-purple focus-visible:ring-offset-2 text-sm sm:text-base"
                 aria-busy={bookingLoading}
               >
                 {bookingLoading ? 'Procesando...' : 'Confirmar reservacion'}

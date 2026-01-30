@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import EmptyState from './ui/EmptyState';
 import { SkeletonGrid } from './ui/LoadingSpinner';
+import GradientPlaceholder from './ui/GradientPlaceholder';
 import {
   getLiveStreams,
   getUpcomingStreams,
@@ -222,11 +223,15 @@ function StreamCard({ stream, onClick }: StreamCardProps) {
     >
       {/* Thumbnail */}
       <div className="relative aspect-video">
-        <img
-          src={stream.thumbnailUrl || `https://picsum.photos/400/225?random=${stream.id}`}
-          alt={stream.title}
-          className="w-full h-full object-cover"
-        />
+        {stream.thumbnailUrl ? (
+          <img
+            src={stream.thumbnailUrl}
+            alt={stream.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <GradientPlaceholder variant="stage" className="w-full h-full" alt={stream.title} />
+        )}
 
         {/* Status badge */}
         <div className="absolute top-3 left-3">

@@ -82,30 +82,17 @@ describe('UserWelcome with different languages', () => {
     expect(screen.getByText('Bienvenido')).toBeInTheDocument();
   });
 
-  it('would show Zapoteco greeting with context', () => {
+  it('would show English greeting with context', () => {
     render(<UserWelcome />, {
       languageContext: {
-        language: 'zapoteco',
-        greeting: 'Padiuxhi',
-        languageLabel: 'Diidxazá',
+        language: 'en',
+        greeting: 'Welcome',
+        languageLabel: 'English',
       }
     });
 
     // Note: Component uses mock data, but this demonstrates the pattern
     // In a real component using useLanguage(), this would work
-    expect(screen.getByRole('heading')).toBeInTheDocument();
-  });
-
-  it('would show Mixteco greeting with context', () => {
-    render(<UserWelcome />, {
-      languageContext: {
-        language: 'mixteco',
-        greeting: 'Naxini',
-        languageLabel: "Tu'un Savi",
-      }
-    });
-
-    // Note: Component uses mock data, but this demonstrates the pattern
     expect(screen.getByRole('heading')).toBeInTheDocument();
   });
 });

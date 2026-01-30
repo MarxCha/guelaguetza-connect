@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Camera, X, Scan, Zap, Volume2, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import GradientPlaceholder from './ui/GradientPlaceholder';
 
 interface MarkerData {
   id: string;
@@ -18,7 +19,7 @@ const MARKERS_DATA: MarkerData[] = [
     region: 'Valles Centrales',
     description: 'Simboliza la conquista de México. El penacho representa el sol y el poder espiritual, adornado con espejos para reflejar la luz divina.',
     color: '#D9006C',
-    image: 'https://picsum.photos/400/300?random=201',
+    image: '400/300?random=201',
     facts: ['Pesa hasta 25 kg', 'Danza por 8 horas', 'Tradición de 500 años']
   },
   {
@@ -27,7 +28,7 @@ const MARKERS_DATA: MarkerData[] = [
     region: 'San Bartolo Coyotepec',
     description: 'Artesanía ancestral de arcilla negra pulida. Su color característico se obtiene mediante un proceso de horneado especial sin oxígeno.',
     color: '#1C1917',
-    image: 'https://picsum.photos/400/300?random=202',
+    image: '400/300?random=202',
     facts: ['Técnica prehispánica', 'Sin pintura añadida', 'Patrimonio cultural']
   },
   {
@@ -36,7 +37,7 @@ const MARKERS_DATA: MarkerData[] = [
     region: 'San Martín Tilcajete',
     description: 'Seres fantásticos tallados en madera de copal y pintados a mano con diseños zapotecos. Se cree que son guías espirituales.',
     color: '#FFD100',
-    image: 'https://picsum.photos/400/300?random=203',
+    image: '400/300?random=203',
     facts: ['Madera de copal', 'Pintados a mano', 'Guías espirituales']
   },
   {
@@ -45,7 +46,7 @@ const MARKERS_DATA: MarkerData[] = [
     region: 'Tuxtepec',
     description: 'Las mujeres bailan con piñas en los hombros, representando la abundancia y fertilidad de la región de la Cuenca del Papaloapan.',
     color: '#00AEEF',
-    image: 'https://picsum.photos/400/300?random=204',
+    image: '400/300?random=204',
     facts: ['Solo mujeres danzan', 'Piñas reales', 'Huipil bordado']
   }
 ];
@@ -149,7 +150,11 @@ const ARScanner: React.FC<ARScannerProps> = ({ onBack }) => {
         <div className="flex-1 flex flex-col items-center justify-center px-6 pb-24">
           {/* Image Card */}
           <div className="relative w-full max-w-sm aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl mb-6">
-            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+            {item.image ? (
+              <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+            ) : (
+              <GradientPlaceholder variant="crafts" className="w-full h-full" alt={item.name} />
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
             <div className="absolute bottom-4 left-4 right-4">
               <p className="text-xs text-white/60 uppercase tracking-wider">{item.region}</p>
@@ -296,7 +301,11 @@ const ARScanner: React.FC<ARScannerProps> = ({ onBack }) => {
       {detectedMarker && (
         <div className="absolute bottom-24 left-4 right-4 bg-white rounded-2xl p-4 shadow-2xl z-30 animate-in slide-in-from-bottom duration-300">
           <div className="flex gap-4">
-            <img src={detectedMarker.image} alt={detectedMarker.name} className="w-20 h-20 rounded-xl object-cover" />
+            {detectedMarker.image ? (
+              <img src={detectedMarker.image} alt={detectedMarker.name} className="w-20 h-20 rounded-xl object-cover" />
+            ) : (
+              <GradientPlaceholder variant="crafts" className="w-20 h-20 rounded-xl" alt={detectedMarker.name} />
+            )}
             <div className="flex-1">
               <div className="flex justify-between items-start">
                 <div>

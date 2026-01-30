@@ -43,8 +43,8 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   const colors = {
     pink: 'bg-oaxaca-pink',
     green: 'bg-green-500',
-    blue: 'bg-blue-500',
-    yellow: 'bg-yellow-500',
+    blue: 'bg-oaxaca-sky',
+    yellow: 'bg-oaxaca-yellow',
     red: 'bg-red-500',
     gradient: 'bg-gradient-to-r from-oaxaca-pink to-oaxaca-earth',
   };
@@ -135,8 +135,8 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
   const colors = {
     pink: 'stroke-oaxaca-pink',
     green: 'stroke-green-500',
-    blue: 'stroke-blue-500',
-    yellow: 'stroke-yellow-500',
+    blue: 'stroke-oaxaca-sky',
+    yellow: 'stroke-oaxaca-yellow',
     red: 'stroke-red-500',
   };
 
@@ -217,7 +217,7 @@ export const StepsProgress: React.FC<StepsProgressProps> = ({
   const colors = {
     pink: 'bg-oaxaca-pink',
     green: 'bg-green-500',
-    blue: 'bg-blue-500',
+    blue: 'bg-oaxaca-sky',
   };
 
   const sizes = {
@@ -288,7 +288,7 @@ export const Rating: React.FC<RatingProps> = ({
   };
 
   const colors = {
-    yellow: 'text-yellow-400',
+    yellow: 'text-oaxaca-yellow',
     pink: 'text-oaxaca-pink',
     red: 'text-red-500',
   };
@@ -519,8 +519,8 @@ export const ScoreBadge: React.FC<ScoreBadgeProps> = ({
 
   let colorClass = 'bg-red-500';
   if (percentage >= 80) colorClass = 'bg-green-500';
-  else if (percentage >= 60) colorClass = 'bg-yellow-500';
-  else if (percentage >= 40) colorClass = 'bg-orange-500';
+  else if (percentage >= 60) colorClass = 'bg-oaxaca-yellow';
+  else if (percentage >= 40) colorClass = 'bg-oaxaca-yellow';
 
   const sizes = {
     sm: 'w-8 h-8 text-sm',
@@ -586,12 +586,12 @@ export const ReviewSummary: React.FC<ReviewSummaryProps> = ({
         {([5, 4, 3, 2, 1] as const).map((stars) => (
           <div key={stars} className="flex items-center gap-2">
             <span className="w-3 text-sm text-gray-600 dark:text-gray-400">{stars}</span>
-            <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-oaxaca-yellow" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
             </svg>
             <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
               <div
-                className="h-full bg-yellow-400 rounded-full transition-all duration-500"
+                className="h-full bg-oaxaca-yellow rounded-full transition-all duration-500"
                 style={{ width: `${maxCount > 0 ? (distribution[stars] / maxCount) * 100 : 0}%` }}
               />
             </div>
@@ -630,8 +630,8 @@ export const SkillProgress: React.FC<SkillProgressProps> = ({
   const colors = {
     pink: 'bg-oaxaca-pink',
     green: 'bg-green-500',
-    blue: 'bg-blue-500',
-    yellow: 'bg-yellow-500',
+    blue: 'bg-oaxaca-sky',
+    yellow: 'bg-oaxaca-yellow',
     red: 'bg-red-500',
   };
 
@@ -693,8 +693,8 @@ export const StatItem: React.FC<StatItemProps> = ({
   const colors = {
     pink: 'bg-oaxaca-pink/10 text-oaxaca-pink',
     green: 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400',
-    blue: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
-    yellow: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400',
+    blue: 'bg-oaxaca-sky-light dark:bg-oaxaca-sky/20 text-oaxaca-sky dark:text-oaxaca-sky',
+    yellow: 'bg-oaxaca-yellow-light dark:bg-oaxaca-yellow/20 text-oaxaca-yellow dark:text-oaxaca-yellow',
     red: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400',
   };
 

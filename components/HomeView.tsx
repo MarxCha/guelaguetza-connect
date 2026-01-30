@@ -13,12 +13,9 @@ import {
   getGoogleMapsUrl,
   getGoogleMapsDirectionsUrl,
 } from '../services/gastronomy';
+import GradientPlaceholder, { type PlaceholderVariant } from './ui/GradientPlaceholder';
 
-const HERO_IMAGES = [
-  '/images/guelaguetza-dancers.png',
-  '/images/guelaguetza-pineapple.png',
-  '/images/guelaguetza-stage.png',
-];
+const HERO_VARIANTS: PlaceholderVariant[] = ['dancers', 'pineapple', 'stage'];
 
 interface HomeViewProps {
   setView: (view: ViewState) => void;
@@ -36,35 +33,35 @@ const DISCOVER_SLIDES = [
     id: 'gastro',
     tag: 'Guía culinaria',
     title: 'Gastronomía',
-    image: 'https://images.unsplash.com/photo-1613514785940-daed07799d9b?w=800&q=80',
+    variant: 'food' as PlaceholderVariant,
     action: 'gastro',
   },
   {
     id: 'artesanias',
     tag: 'Arte popular',
     title: 'Artesanías',
-    image: 'https://images.unsplash.com/photo-1604176424472-17cd740f74e9?w=800&q=80',
+    variant: 'crafts' as PlaceholderVariant,
     action: 'tienda',
   },
   {
     id: 'mezcal',
     tag: 'Tradición ancestral',
     title: 'Mezcal',
-    image: 'https://images.unsplash.com/photo-1569529465841-dfecdab7503b?w=800&q=80',
+    variant: 'mezcal' as PlaceholderVariant,
     action: 'gastro',
   },
   {
     id: 'danzas',
     tag: 'Folklore vivo',
     title: 'Danzas',
-    image: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&q=80',
+    variant: 'dancers' as PlaceholderVariant,
     action: 'programa',
   },
   {
     id: 'naturaleza',
     tag: 'Ecoturismo',
     title: 'Naturaleza',
-    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80',
+    variant: 'nature' as PlaceholderVariant,
     action: 'experiencias',
   },
 ];
@@ -85,7 +82,7 @@ const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
   useEffect(() => {
     // Auto-advance hero carousel
     const interval = setInterval(() => {
-      setHeroIndex((prev) => (prev + 1) % HERO_IMAGES.length);
+      setHeroIndex((prev) => (prev + 1) % HERO_VARIANTS.length);
     }, 5000);
     return () => clearInterval(interval);
   }, []);
@@ -103,23 +100,23 @@ const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
     getWishlistCount().then(setWishlistCount).catch(() => {});
   }, []);
 
-  const nextHero = () => setHeroIndex((prev) => (prev + 1) % HERO_IMAGES.length);
-  const prevHero = () => setHeroIndex((prev) => (prev - 1 + HERO_IMAGES.length) % HERO_IMAGES.length);
+  const nextHero = () => setHeroIndex((prev) => (prev + 1) % HERO_VARIANTS.length);
+  const prevHero = () => setHeroIndex((prev) => (prev - 1 + HERO_VARIANTS.length) % HERO_VARIANTS.length);
 
   return (
     <div className="pb-24 md:pb-8 animate-fade-in">
       {/* Hero Header - Responsive with Carousel */}
       <div className="relative h-72 md:h-96 lg:h-[28rem] md:rounded-b-[2rem] lg:rounded-b-[3rem] overflow-hidden shadow-lg">
-        {/* Hero Image Carousel */}
-        {HERO_IMAGES.map((img, index) => (
-          <img
-            key={img}
-            src={img}
-            alt={`Guelaguetza ${index + 1}`}
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
+        {/* Hero Gradient Carousel */}
+        {HERO_VARIANTS.map((variant, index) => (
+          <div
+            key={variant}
+            className={`absolute inset-0 transition-opacity duration-700 ${
               index === heroIndex ? 'opacity-100' : 'opacity-0'
             }`}
-          />
+          >
+            <GradientPlaceholder variant={variant} className="w-full h-full" iconSize={0} />
+          </div>
         ))}
 
         {/* Overlay gradient */}
@@ -141,7 +138,7 @@ const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
 
         {/* Carousel Indicators */}
         <div className="absolute bottom-20 md:bottom-24 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-          {HERO_IMAGES.map((_, index) => (
+          {HERO_VARIANTS.map((_, index) => (
             <button
               key={index}
               onClick={() => setHeroIndex(index)}
@@ -174,7 +171,7 @@ const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
             >
               <Heart size={20} />
               {wishlistCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-pink-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold border border-white">
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-oaxaca-pink text-white text-[10px] rounded-full flex items-center justify-center font-bold border border-white">
                   {wishlistCount}
                 </span>
               )}
@@ -199,9 +196,9 @@ const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
 
         {/* Hero Content */}
         <div className="absolute bottom-6 left-6 right-6 md:bottom-10 md:left-10 text-white">
-          <p className="text-sm md:text-base font-semibold uppercase tracking-wider mb-1 text-oaxaca-yellow drop-shadow-lg">Julio 21-28, 2025</p>
+          <p className="text-sm md:text-base font-semibold uppercase tracking-wider mb-1 text-oaxaca-yellow drop-shadow-lg">{t('july_dates')}</p>
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight drop-shadow-lg">{greeting}! Guelaguetza</h1>
-          <p className="text-white/90 text-sm md:text-base lg:text-lg mt-2 max-w-xl drop-shadow">{t('welcome_message')} en tu bolsillo.</p>
+          <p className="text-white/90 text-sm md:text-base lg:text-lg mt-2 max-w-xl drop-shadow">{t('welcome_message')} {t('in_your_pocket')}.</p>
         </div>
       </div>
 
@@ -214,8 +211,8 @@ const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
             className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 md:p-5 flex items-center justify-between border-l-4 border-oaxaca-yellow cursor-pointer hover:shadow-lg transition active:scale-[0.98]"
           >
             <div>
-              <h3 className="font-bold text-gray-800 dark:text-gray-100 md:text-lg">Próximo Evento</h3>
-              <p className="text-sm md:text-base text-gray-500 dark:text-gray-400">Desfile de Delegaciones • 17:00</p>
+              <h3 className="font-bold text-gray-800 dark:text-gray-100 md:text-lg">{t('next_event')}</h3>
+              <p className="text-sm md:text-base text-gray-500 dark:text-gray-400">{t('parade')} • 17:00</p>
             </div>
             <button className="bg-oaxaca-purple text-white p-2 md:p-3 rounded-full hover:bg-opacity-90 transition">
                <PlayCircle size={24} />
@@ -233,59 +230,59 @@ const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
                 onClick={() => setView(ViewState.TRANSPORT)}
                 className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 active:scale-95 transition cursor-pointer hover:shadow-md"
               >
-                <div className="bg-blue-100 dark:bg-blue-900/30 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 mb-3">
+                <div className="bg-oaxaca-sky-light dark:bg-oaxaca-sky/20 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-oaxaca-sky dark:text-oaxaca-sky mb-3">
                   <MapPin size={20} className="md:w-6 md:h-6" />
                 </div>
-                <h3 className="font-bold text-gray-800 dark:text-gray-100">Transporte</h3>
-                <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1">Rutas seguras y ETA</p>
+                <h3 className="font-bold text-gray-800 dark:text-gray-100">{t('transport')}</h3>
+                <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1">{t('safe_routes')}</p>
               </div>
 
               <div
                 onClick={() => setView(ViewState.AR_SCANNER)}
                 className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 active:scale-95 transition cursor-pointer hover:shadow-md"
               >
-                <div className="bg-purple-100 dark:bg-purple-900/30 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-purple-600 dark:text-purple-400 mb-3">
+                <div className="bg-oaxaca-purple-light dark:bg-oaxaca-purple/20 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-oaxaca-purple dark:text-oaxaca-pink mb-3">
                   <Camera size={20} className="md:w-6 md:h-6" />
                 </div>
-                <h3 className="font-bold text-gray-800 dark:text-gray-100">Museo AR</h3>
-                <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1">Descubre la magia</p>
+                <h3 className="font-bold text-gray-800 dark:text-gray-100">{t('ar_museum')}</h3>
+                <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1">{t('discover_magic')}</p>
               </div>
 
               <div
                 onClick={() => setView(ViewState.STORIES)}
                 className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 active:scale-95 transition cursor-pointer hover:shadow-md"
               >
-                <div className="bg-pink-100 dark:bg-pink-900/30 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-pink-600 dark:text-pink-400 mb-3">
+                <div className="bg-oaxaca-pink-light dark:bg-oaxaca-pink/20 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-oaxaca-pink dark:text-oaxaca-pink mb-3">
                   <PlayCircle size={20} className="md:w-6 md:h-6" />
                 </div>
-                <h3 className="font-bold text-gray-800 dark:text-gray-100">Historias</h3>
-                <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1">Momentos en vivo</p>
+                <h3 className="font-bold text-gray-800 dark:text-gray-100">{t('stories')}</h3>
+                <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1">{t('live_moments')}</p>
               </div>
 
               <div
                 onClick={() => setView(ViewState.PROGRAM)}
                 className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 active:scale-95 transition cursor-pointer hover:shadow-md"
               >
-                <div className="bg-yellow-100 dark:bg-yellow-900/30 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-yellow-700 dark:text-yellow-400 mb-3">
+                <div className="bg-oaxaca-yellow-light dark:bg-oaxaca-yellow/20 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-oaxaca-yellow dark:text-oaxaca-yellow mb-3">
                   <Calendar size={20} className="md:w-6 md:h-6" />
                 </div>
-                <h3 className="font-bold text-gray-800 dark:text-gray-100">Programa</h3>
-                <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1">Ver calendario</p>
+                <h3 className="font-bold text-gray-800 dark:text-gray-100">{t('program')}</h3>
+                <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1">{t('complete_calendar')}</p>
               </div>
             </div>
 
             {/* Phase 6 Features - Responsive */}
             <div className="mt-6 md:mt-8">
-              <h2 className="font-bold text-lg md:text-xl mb-4 text-gray-800 dark:text-gray-100">Nuevas Experiencias</h2>
+              <h2 className="font-bold text-lg md:text-xl mb-4 text-gray-800 dark:text-gray-100">{t('new_experiences')}</h2>
               <div className="grid grid-cols-4 md:grid-cols-4 gap-3 md:gap-4">
                 <div
                   onClick={() => setView(ViewState.TIENDA)}
-                  className="flex flex-col items-center p-3 md:p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl cursor-pointer hover:bg-amber-100 transition active:scale-95"
+                  className="flex flex-col items-center p-3 md:p-4 bg-oaxaca-yellow-light dark:bg-oaxaca-yellow/20 rounded-xl cursor-pointer hover:bg-oaxaca-yellow/30 transition active:scale-95"
                 >
-                  <div className="bg-amber-500 p-2.5 md:p-3 rounded-full text-white mb-2">
+                  <div className="bg-oaxaca-yellow p-2.5 md:p-3 rounded-full text-white mb-2">
                     <ShoppingBag size={18} className="md:w-5 md:h-5" />
                   </div>
-                  <span className="text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300">Tienda</span>
+                  <span className="text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300">{t('shop')}</span>
                 </div>
 
                 <div
@@ -295,17 +292,17 @@ const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
                   <div className="bg-red-500 p-2.5 md:p-3 rounded-full text-white mb-2">
                     <Radio size={18} className="md:w-5 md:h-5" />
                   </div>
-                  <span className="text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300">En Vivo</span>
+                  <span className="text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300">{t('streams')}</span>
                 </div>
 
                 <div
                   onClick={() => setView(ViewState.EXPERIENCES)}
-                  className="flex flex-col items-center p-3 md:p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl cursor-pointer hover:bg-purple-100 transition active:scale-95"
+                  className="flex flex-col items-center p-3 md:p-4 bg-oaxaca-purple-light dark:bg-oaxaca-purple/20 rounded-xl cursor-pointer hover:bg-oaxaca-purple/30 transition active:scale-95"
                 >
-                  <div className="bg-purple-500 p-2.5 md:p-3 rounded-full text-white mb-2">
+                  <div className="bg-oaxaca-purple p-2.5 md:p-3 rounded-full text-white mb-2">
                     <Ticket size={18} className="md:w-5 md:h-5" />
                   </div>
-                  <span className="text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300">Tours</span>
+                  <span className="text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300">{t('tours')}</span>
                 </div>
 
                 <div
@@ -315,35 +312,35 @@ const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
                   <div className="bg-emerald-500 p-2.5 md:p-3 rounded-full text-white mb-2">
                     <Map size={18} className="md:w-5 md:h-5" />
                   </div>
-                  <span className="text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300">Planificar</span>
+                  <span className="text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300">{t('plan')}</span>
                 </div>
               </div>
             </div>
 
             {/* Community Features - Events & Communities */}
             <div className="mt-6 md:mt-8">
-              <h2 className="font-bold text-lg md:text-xl mb-4 text-gray-800 dark:text-gray-100">Comunidad</h2>
+              <h2 className="font-bold text-lg md:text-xl mb-4 text-gray-800 dark:text-gray-100">{t('community')}</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div
                   onClick={() => setView(ViewState.EVENTS)}
-                  className="bg-gradient-to-br from-rose-500 to-pink-600 p-4 md:p-5 rounded-xl shadow-md cursor-pointer hover:shadow-lg transition active:scale-[0.98] text-white"
+                  className="bg-gradient-to-br from-oaxaca-pink to-oaxaca-purple p-4 md:p-5 rounded-xl shadow-md cursor-pointer hover:shadow-lg transition active:scale-[0.98] text-white"
                 >
                   <div className="bg-white/20 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mb-3">
                     <CalendarDays size={20} className="md:w-6 md:h-6" />
                   </div>
-                  <h3 className="font-bold">Eventos</h3>
-                  <p className="text-xs md:text-sm text-white/80 mt-1">Calendario completo</p>
+                  <h3 className="font-bold">{t('events')}</h3>
+                  <p className="text-xs md:text-sm text-white/80 mt-1">{t('complete_calendar')}</p>
                 </div>
 
                 <div
                   onClick={() => setView(ViewState.COMMUNITIES)}
-                  className="bg-gradient-to-br from-indigo-500 to-purple-600 p-4 md:p-5 rounded-xl shadow-md cursor-pointer hover:shadow-lg transition active:scale-[0.98] text-white"
+                  className="bg-gradient-to-br from-oaxaca-purple to-oaxaca-pink p-4 md:p-5 rounded-xl shadow-md cursor-pointer hover:shadow-lg transition active:scale-[0.98] text-white"
                 >
                   <div className="bg-white/20 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mb-3">
                     <Users size={20} className="md:w-6 md:h-6" />
                   </div>
-                  <h3 className="font-bold">Comunidades</h3>
-                  <p className="text-xs md:text-sm text-white/80 mt-1">Grupos y foros</p>
+                  <h3 className="font-bold">{t('communities')}</h3>
+                  <p className="text-xs md:text-sm text-white/80 mt-1">{t('community_groups')}</p>
                 </div>
               </div>
             </div>
@@ -351,7 +348,7 @@ const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
             {/* Featured Banner - Discover Oaxaca Carousel */}
             <div className="mt-8">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-bold text-lg md:text-xl text-gray-800 dark:text-gray-100">Descubre Oaxaca</h2>
+                <h2 className="font-bold text-lg md:text-xl text-gray-800 dark:text-gray-100">{t('discover_oaxaca')}</h2>
                 <div className="flex gap-1.5">
                   {DISCOVER_SLIDES.map((_, index) => (
                     <button
@@ -380,16 +377,16 @@ const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
                 }}
                 className="relative rounded-xl overflow-hidden h-40 md:h-48 lg:h-56 shadow-md cursor-pointer hover:shadow-lg transition active:scale-[0.98]"
               >
-                {/* Carousel Images */}
+                {/* Carousel Gradients */}
                 {DISCOVER_SLIDES.map((slide, index) => (
-                  <img
+                  <div
                     key={slide.id}
-                    src={slide.image}
-                    alt={slide.title}
-                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+                    className={`absolute inset-0 transition-opacity duration-1000 ${
                       index === discoverIndex ? 'opacity-100' : 'opacity-0'
                     }`}
-                  />
+                  >
+                    <GradientPlaceholder variant={slide.variant} className="w-full h-full" iconSize={0} />
+                  </div>
                 ))}
                 <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent flex items-center">
                   <div className="pl-6 md:pl-8">
@@ -430,22 +427,22 @@ const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
             <div className="sticky top-4 space-y-6">
               {/* Quick Stats Card */}
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
-                <h3 className="font-bold text-gray-800 dark:text-gray-100 mb-4">Festival en Numeros</h3>
+                <h3 className="font-bold text-gray-800 dark:text-gray-100 mb-4">{t('festival_numbers')}</h3>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-500 dark:text-gray-400">Delegaciones</span>
-                    <span className="font-bold text-oaxaca-pink">8 regiones</span>
+                    <span className="text-gray-500 dark:text-gray-400">{t('delegations')}</span>
+                    <span className="font-bold text-oaxaca-pink">8 {t('regions')}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-500 dark:text-gray-400">Eventos</span>
+                    <span className="text-gray-500 dark:text-gray-400">{t('events')}</span>
                     <span className="font-bold text-oaxaca-purple">50+</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-500 dark:text-gray-400">Artesanos</span>
-                    <span className="font-bold text-amber-500">200+</span>
+                    <span className="text-gray-500 dark:text-gray-400">{t('artisans')}</span>
+                    <span className="font-bold text-oaxaca-yellow">200+</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-500 dark:text-gray-400">Visitantes esperados</span>
+                    <span className="text-gray-500 dark:text-gray-400">{t('expected_visitors')}</span>
                     <span className="font-bold text-emerald-500">100k+</span>
                   </div>
                 </div>
@@ -458,22 +455,22 @@ const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
                     <MessageCircle size={24} />
                   </div>
                   <div>
-                    <h3 className="font-bold">GuelaBot</h3>
-                    <p className="text-xs text-white/70">Tu asistente virtual</p>
+                    <h3 className="font-bold">{t('guelabot')}</h3>
+                    <p className="text-xs text-white/70">{t('virtual_assistant')}</p>
                   </div>
                 </div>
-                <p className="text-sm text-white/90 mb-4">Preguntame sobre rutas, horarios, recomendaciones y mas.</p>
+                <p className="text-sm text-white/90 mb-4">{t('ask_about')}</p>
                 <button
                   onClick={() => setView(ViewState.CHAT)}
                   className="w-full bg-white text-oaxaca-purple font-medium py-2 rounded-lg hover:bg-white/90 transition"
                 >
-                  Iniciar chat
+                  {t('start_chat')}
                 </button>
               </div>
 
               {/* Gastronomy Quick Links */}
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
-                <h3 className="font-bold text-gray-800 dark:text-gray-100 mb-4">Gastronomía</h3>
+                <h3 className="font-bold text-gray-800 dark:text-gray-100 mb-4">{t('gastronomy')}</h3>
                 <div className="space-y-3">
                   {GASTRO_ITEMS.map((item, index) => (
                     <div
@@ -506,8 +503,8 @@ const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
             <div className="bg-gradient-to-r from-oaxaca-purple to-oaxaca-pink p-4 text-white">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <h3 className="font-bold text-lg">Sabores de Oaxaca</h3>
-                  <p className="text-xs text-white/70">Lugares curados por locales</p>
+                  <h3 className="font-bold text-lg">{t('flavors_of_oaxaca')}</h3>
+                  <p className="text-xs text-white/70">{t('curated_by_locals')}</p>
                 </div>
                 <button
                   onClick={() => {
@@ -530,7 +527,7 @@ const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
                       : 'bg-white/20 text-white hover:bg-white/30'
                   }`}
                 >
-                  Todos
+                  {t('all_categories')}
                 </button>
                 {GASTRO_ITEMS.map((item) => (
                   <button
@@ -573,7 +570,7 @@ const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
                       </div>
                       {/* Reservation Badge */}
                       {place.requiresReservation && (
-                        <div className="absolute top-1 right-1 bg-amber-500 p-0.5 rounded">
+                        <div className="absolute top-1 right-1 bg-oaxaca-yellow p-0.5 rounded">
                           <Clock size={10} className="text-white" />
                         </div>
                       )}
@@ -591,11 +588,11 @@ const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
                         "{place.vibe}"
                       </p>
                       <div className="flex items-center gap-2 mt-1.5">
-                        <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                        <span className="text-xs font-medium text-oaxaca-yellow dark:text-oaxaca-yellow">
                           {place.priceRange}
                         </span>
                         {place.requiresReservation && (
-                          <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded">
+                          <span className="text-[10px] bg-oaxaca-yellow-light dark:bg-oaxaca-yellow/20 text-oaxaca-yellow dark:text-oaxaca-yellow px-1.5 py-0.5 rounded">
                             Reservar
                           </span>
                         )}
@@ -608,7 +605,7 @@ const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
                     <div className="flex items-start gap-1.5 text-xs">
                       <Star size={12} className="text-oaxaca-yellow fill-oaxaca-yellow flex-shrink-0 mt-0.5" />
                       <div>
-                        <span className="font-medium text-gray-700 dark:text-gray-300">El imperdible: </span>
+                        <span className="font-medium text-gray-700 dark:text-gray-300">{t('must_try')}: </span>
                         <span className="text-gray-600 dark:text-gray-400">{place.mustTry}</span>
                       </div>
                     </div>
@@ -623,17 +620,17 @@ const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
                       className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition"
                     >
                       <ExternalLink size={12} />
-                      Ver en Maps
+                      {t('view_in_maps')}
                     </a>
                     <div className="w-px bg-gray-200 dark:bg-gray-600" />
                     <a
                       href={getGoogleMapsDirectionsUrl(place)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-oaxaca-purple dark:text-oaxaca-yellow hover:bg-purple-50 dark:hover:bg-purple-900/20 transition"
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-oaxaca-purple dark:text-oaxaca-yellow hover:bg-oaxaca-purple-light dark:hover:bg-oaxaca-purple/20 transition"
                     >
                       <Navigation size={12} />
-                      Cómo llegar
+                      {t('how_to_get_there')}
                     </a>
                   </div>
                 </div>
@@ -642,7 +639,7 @@ const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
               {/* Empty State */}
               {filteredPlaces.length === 0 && (
                 <div className="text-center py-8">
-                  <p className="text-gray-500 dark:text-gray-400">No hay lugares en esta categoría</p>
+                  <p className="text-gray-500 dark:text-gray-400">{t('no_places_category')}</p>
                 </div>
               )}
             </div>
@@ -658,7 +655,7 @@ const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
                 className="w-full py-3 bg-oaxaca-pink text-white rounded-xl font-medium hover:bg-opacity-90 transition flex items-center justify-center gap-2"
               >
                 <MessageCircle size={18} />
-                Pregunta a GuelaBot por más recomendaciones
+                {t('ask_guelabot')}
               </button>
             </div>
           </div>
@@ -668,14 +665,14 @@ const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
       {/* Floating GuelaBot Button - Mobile Only */}
       <button
         onClick={() => setView(ViewState.CHAT)}
-        className="md:hidden fixed bottom-24 right-4 bg-oaxaca-purple text-white p-4 rounded-full shadow-lg hover:bg-purple-800 transition-all hover:scale-110 active:scale-95 z-40 group"
+        className="md:hidden fixed bottom-24 right-4 bg-oaxaca-purple text-white p-4 rounded-full shadow-lg hover:bg-oaxaca-purple/90 transition-all hover:scale-110 active:scale-95 z-40 group"
       >
         <div className="relative">
           <MessageCircle size={24} />
           <Sparkles size={12} className="absolute -top-1 -right-1 text-oaxaca-yellow" />
         </div>
         <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 text-xs font-medium px-3 py-1.5 rounded-lg shadow-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-          Pregunta a GuelaBot
+          {t('ask_guelabot_short')}
         </span>
       </button>
     </div>

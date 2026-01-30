@@ -102,7 +102,7 @@ const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ onBack, onNavigate 
   return (
     <div className="h-full bg-gray-50 dark:bg-gray-950 overflow-y-auto">
       {/* Header */}
-      <div className="bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 text-white">
+      <div className="bg-gradient-to-br from-oaxaca-purple via-oaxaca-pink to-oaxaca-purple text-white">
         <div className="px-4 py-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -146,7 +146,7 @@ const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ onBack, onNavigate 
                 onClick={() => setTimeRange(range)}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${
                   timeRange === range
-                    ? 'bg-white text-purple-600'
+                    ? 'bg-white text-oaxaca-purple'
                     : 'bg-white/20 hover:bg-white/30'
                 }`}
               >
@@ -220,18 +220,18 @@ const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ onBack, onNavigate 
             </span>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 text-center">
-              <Eye size={24} className="mx-auto text-blue-500 mb-2" />
+            <div className="bg-oaxaca-sky-light dark:bg-oaxaca-sky/20 rounded-xl p-4 text-center">
+              <Eye size={24} className="mx-auto text-oaxaca-sky mb-2" />
               <div className="text-2xl font-bold text-gray-900 dark:text-white">1,247</div>
               <div className="text-xs text-gray-500 dark:text-gray-400">Online ahora</div>
             </div>
-            <div className="bg-pink-50 dark:bg-pink-900/20 rounded-xl p-4 text-center">
-              <Image size={24} className="mx-auto text-pink-500 mb-2" />
+            <div className="bg-oaxaca-pink-light dark:bg-oaxaca-pink/20 rounded-xl p-4 text-center">
+              <Image size={24} className="mx-auto text-oaxaca-pink mb-2" />
               <div className="text-2xl font-bold text-gray-900 dark:text-white">47</div>
               <div className="text-xs text-gray-500 dark:text-gray-400">Historias/hora</div>
             </div>
-            <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4 text-center">
-              <MessageCircle size={24} className="mx-auto text-purple-500 mb-2" />
+            <div className="bg-oaxaca-purple-light dark:bg-oaxaca-purple/20 rounded-xl p-4 text-center">
+              <MessageCircle size={24} className="mx-auto text-oaxaca-purple mb-2" />
               <div className="text-2xl font-bold text-gray-900 dark:text-white">312</div>
               <div className="text-xs text-gray-500 dark:text-gray-400">Mensajes/hora</div>
             </div>
@@ -246,7 +246,7 @@ const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ onBack, onNavigate 
         {/* Weekly Users Chart */}
         <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
           <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <BarChart3 size={18} className="text-purple-500" />
+            <BarChart3 size={18} className="text-oaxaca-purple" />
             Usuarios por Dia
           </h3>
           <div className="h-48 flex items-end justify-between gap-2">
@@ -256,7 +256,7 @@ const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ onBack, onNavigate 
                   {(data.users / 1000).toFixed(1)}k
                 </div>
                 <div
-                  className="w-full bg-gradient-to-t from-purple-500 to-pink-500 rounded-t-lg transition-all hover:from-purple-600 hover:to-pink-600"
+                  className="w-full bg-gradient-to-t from-oaxaca-purple to-oaxaca-pink rounded-t-lg transition-all hover:from-oaxaca-purple/90 hover:to-oaxaca-pink/90"
                   style={{ height: `${(data.users / maxWeeklyUsers) * 140}px` }}
                 />
                 <div className="text-xs font-medium text-gray-600 dark:text-gray-300 mt-2">
@@ -273,7 +273,7 @@ const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ onBack, onNavigate 
           {/* Feature Usage */}
           <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
             <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <PieChart size={18} className="text-orange-500" />
+              <PieChart size={18} className="text-oaxaca-yellow" />
               Uso por Funcionalidad
             </h3>
             <div className="space-y-3">
@@ -305,13 +305,13 @@ const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ onBack, onNavigate 
           {/* Geographic Distribution */}
           <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
             <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <Globe size={18} className="text-blue-500" />
+              <Globe size={18} className="text-oaxaca-sky" />
               Distribucion Geografica
             </h3>
             <div className="space-y-3">
               {GEOGRAPHIC_DATA.map((region, idx) => (
                 <div key={region.region} className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-oaxaca-sky to-oaxaca-purple flex items-center justify-center text-white text-xs font-bold">
                     {idx + 1}
                   </div>
                   <div className="flex-1">
@@ -323,7 +323,7 @@ const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ onBack, onNavigate 
                     </div>
                     <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
+                        className="h-full bg-gradient-to-r from-oaxaca-sky to-oaxaca-purple rounded-full"
                         style={{ width: `${region.percentage}%` }}
                       />
                     </div>
@@ -368,7 +368,7 @@ const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ onBack, onNavigate 
         {/* Content Stats */}
         <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
           <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <Image size={18} className="text-pink-500" />
+            <Image size={18} className="text-oaxaca-pink" />
             Estadisticas de Contenido
           </h3>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-3">

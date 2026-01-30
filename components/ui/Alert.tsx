@@ -46,9 +46,9 @@ const alertIcons = {
 
 const alertColors = {
   info: {
-    filled: 'bg-blue-500 text-white',
-    outlined: 'border-2 border-blue-500 text-blue-700 dark:text-blue-400',
-    soft: 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800',
+    filled: 'bg-oaxaca-sky text-white',
+    outlined: 'border-2 border-oaxaca-sky text-oaxaca-sky dark:text-oaxaca-sky',
+    soft: 'bg-oaxaca-sky-light dark:bg-oaxaca-sky/20 text-oaxaca-sky dark:text-oaxaca-sky border border-oaxaca-sky/30 dark:border-oaxaca-sky/30',
   },
   success: {
     filled: 'bg-green-500 text-white',
@@ -56,9 +56,9 @@ const alertColors = {
     soft: 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800',
   },
   warning: {
-    filled: 'bg-yellow-500 text-white',
-    outlined: 'border-2 border-yellow-500 text-yellow-700 dark:text-yellow-400',
-    soft: 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800',
+    filled: 'bg-oaxaca-yellow text-white',
+    outlined: 'border-2 border-oaxaca-yellow text-oaxaca-yellow dark:text-oaxaca-yellow',
+    soft: 'bg-oaxaca-yellow-light dark:bg-oaxaca-yellow/20 text-oaxaca-yellow dark:text-oaxaca-yellow border border-oaxaca-yellow/30 dark:border-oaxaca-yellow/30',
   },
   error: {
     filled: 'bg-red-500 text-white',
@@ -166,9 +166,9 @@ interface BannerProps {
 }
 
 const bannerColors = {
-  info: 'bg-blue-600 text-white',
+  info: 'bg-oaxaca-sky text-white',
   success: 'bg-green-600 text-white',
-  warning: 'bg-yellow-500 text-gray-900',
+  warning: 'bg-oaxaca-yellow text-gray-900',
   error: 'bg-red-600 text-white',
   promo: 'bg-gradient-to-r from-oaxaca-pink to-oaxaca-earth text-white',
 };
@@ -267,9 +267,9 @@ interface CalloutProps {
 
 const calloutColors = {
   info: {
-    border: 'border-l-blue-500',
-    bg: 'bg-blue-50 dark:bg-blue-900/10',
-    icon: 'text-blue-500',
+    border: 'border-l-oaxaca-sky',
+    bg: 'bg-oaxaca-sky-light dark:bg-oaxaca-sky/10',
+    icon: 'text-oaxaca-sky',
   },
   tip: {
     border: 'border-l-green-500',
@@ -277,9 +277,9 @@ const calloutColors = {
     icon: 'text-green-500',
   },
   warning: {
-    border: 'border-l-yellow-500',
-    bg: 'bg-yellow-50 dark:bg-yellow-900/10',
-    icon: 'text-yellow-500',
+    border: 'border-l-oaxaca-yellow',
+    bg: 'bg-oaxaca-yellow-light dark:bg-oaxaca-yellow/10',
+    icon: 'text-oaxaca-yellow',
   },
   danger: {
     border: 'border-l-red-500',
@@ -580,7 +580,7 @@ export const OfflineBanner: React.FC<OfflineBannerProps> = ({
 }) => {
   return (
     <div className={`bg-gray-900 text-white px-4 py-2 flex items-center justify-center gap-3 ${className}`}>
-      <svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
+      <svg className="w-5 h-5 text-oaxaca-yellow" fill="currentColor" viewBox="0 0 24 24">
         <path d="M23.64 7c-.45-.34-4.93-4-11.64-4-1.5 0-2.89.19-4.15.48L18.18 13.8 23.64 7zM17.04 15.22L3.27 1.44 2 2.72l2.05 2.06C1.91 5.76.59 6.82.36 7l11.63 14.49.01.01.01-.01 3.9-4.86 3.32 3.32 1.27-1.27-3.46-3.46z" />
       </svg>
       <span className="text-sm font-medium">{message}</span>
@@ -614,7 +614,7 @@ export const MaintenanceBanner: React.FC<MaintenanceBannerProps> = ({
   className = '',
 }) => {
   return (
-    <div className={`bg-gradient-to-r from-yellow-500 to-orange-500 text-white ${className}`}>
+    <div className={`bg-gradient-to-r from-oaxaca-yellow to-oaxaca-yellow text-white ${className}`}>
       <div className="max-w-7xl mx-auto px-4 py-3">
         <div className="flex items-center justify-center gap-3">
           <svg className="w-6 h-6 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">

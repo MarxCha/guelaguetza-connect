@@ -17,6 +17,7 @@ import {
 import { ViewState } from '../types';
 import EmptyState from './ui/EmptyState';
 import LoadingSpinner from './ui/LoadingSpinner';
+import GradientPlaceholder from './ui/GradientPlaceholder';
 import { useToast } from './ui/Toast';
 
 interface CartViewProps {
@@ -133,7 +134,7 @@ export default function CartView({ onNavigate, onBack }: CartViewProps) {
         ) : (
           <div className="p-4 space-y-4">
             {cart.items.map((item) => {
-              const mainImage = item.product.images[0] || `https://picsum.photos/100/100?random=${item.product.id}`;
+              const mainImage = item.product.images[0] || '';
               const isUpdating = updatingItem === item.id;
 
               return (
@@ -142,11 +143,15 @@ export default function CartView({ onNavigate, onBack }: CartViewProps) {
                   className={`bg-white rounded-xl p-4 shadow-sm ${isUpdating ? 'opacity-50' : ''}`}
                 >
                   <div className="flex gap-4">
-                    <img
-                      src={mainImage}
-                      alt={item.product.name}
-                      className="w-20 h-20 rounded-lg object-cover"
-                    />
+                    {mainImage ? (
+                      <img
+                        src={mainImage}
+                        alt={item.product.name}
+                        className="w-20 h-20 rounded-lg object-cover"
+                      />
+                    ) : (
+                      <GradientPlaceholder variant="shop" className="w-20 h-20 rounded-lg" alt={item.product.name} />
+                    )}
                     <div className="flex-1">
                       <h3 className="font-medium text-gray-900 line-clamp-1">
                         {item.product.name}

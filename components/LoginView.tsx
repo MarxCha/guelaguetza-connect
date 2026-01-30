@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Mail, Lock, Eye, EyeOff, Scan, Camera, X, Loader2, ArrowRight, Sparkles } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { ViewState } from '../types';
 
 interface LoginViewProps {
@@ -9,6 +10,7 @@ interface LoginViewProps {
 
 const LoginView: React.FC<LoginViewProps> = ({ setView }) => {
   const { login, loginWithFace, loginAsDemo } = useAuth();
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -201,8 +203,8 @@ const LoginView: React.FC<LoginViewProps> = ({ setView }) => {
         <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-6">
           <Sparkles className="w-10 h-10 text-oaxaca-yellow" />
         </div>
-        <h1 className="text-3xl font-bold text-white mb-2">¡Bienvenido!</h1>
-        <p className="text-white/70 text-center">Inicia sesión para vivir la Guelaguetza</p>
+        <h1 className="text-3xl font-bold text-white mb-2">{t('greeting')}!</h1>
+        <p className="text-white/70 text-center">{t('login')}</p>
       </div>
 
       {/* Login Form */}
@@ -215,7 +217,7 @@ const LoginView: React.FC<LoginViewProps> = ({ setView }) => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Correo electrónico"
+              placeholder={t('email')}
               className="w-full pl-12 pr-4 py-4 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-oaxaca-pink outline-none transition"
               required
             />
@@ -228,7 +230,7 @@ const LoginView: React.FC<LoginViewProps> = ({ setView }) => {
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Contraseña"
+              placeholder={t('password')}
               className="w-full pl-12 pr-12 py-4 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-oaxaca-pink outline-none transition"
               required
             />
@@ -256,7 +258,7 @@ const LoginView: React.FC<LoginViewProps> = ({ setView }) => {
               <Loader2 className="animate-spin" size={20} />
             ) : (
               <>
-                Iniciar Sesión
+                {t('login')}
                 <ArrowRight size={20} />
               </>
             )}
@@ -276,17 +278,17 @@ const LoginView: React.FC<LoginViewProps> = ({ setView }) => {
           className="w-full bg-gray-900 dark:bg-gray-700 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-gray-800 dark:hover:bg-gray-600 transition"
         >
           <Scan size={24} />
-          Face ID
+          {t('login_with_face')}
         </button>
 
         {/* Register Link */}
         <p className="text-center mt-6 text-gray-600 dark:text-gray-400">
-          ¿No tienes cuenta?{' '}
+          {t('no_account')}{' '}
           <button
             onClick={() => setView(ViewState.REGISTER)}
             className="text-oaxaca-pink font-bold hover:underline"
           >
-            Regístrate
+            {t('register')}
           </button>
         </p>
 

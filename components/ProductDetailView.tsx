@@ -25,6 +25,7 @@ import {
 } from '../services/marketplace';
 import { ViewState } from '../types';
 import LoadingSpinner from './ui/LoadingSpinner';
+import GradientPlaceholder from './ui/GradientPlaceholder';
 import { useToast } from './ui/Toast';
 
 interface ProductDetailViewProps {
@@ -127,18 +128,22 @@ export default function ProductDetailView({
 
   const images = product.images.length > 0
     ? product.images
-    : [`https://picsum.photos/400/400?random=${productId}`];
+    : [];
 
   return (
     <div className="flex flex-col h-full bg-white">
       {/* Image Gallery */}
       <div className="relative">
         <div className="aspect-square bg-gray-100">
-          <img
-            src={images[activeImageIndex]}
-            alt={product.name}
-            className="w-full h-full object-cover"
-          />
+          {images.length > 0 ? (
+            <img
+              src={images[activeImageIndex]}
+              alt={product.name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <GradientPlaceholder variant="shop" className="w-full h-full" alt={product.name} />
+          )}
         </div>
 
         {/* Navigation */}

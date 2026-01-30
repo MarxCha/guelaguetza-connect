@@ -31,8 +31,8 @@ export const STORIES: Story[] = [
   {
     id: '1',
     user: 'Ana Morales',
-    avatar: 'https://picsum.photos/50/50?random=1',
-    mediaUrl: 'https://picsum.photos/400/600?random=101',
+    avatar: '50/50?random=1',
+    mediaUrl: '400/600?random=101',
     location: 'Auditorio Guelaguetza',
     likes: 342,
     description: '¡Viviendo la magia del Lunes del Cerro! 🎉 #Guelaguetza2025'
@@ -40,8 +40,8 @@ export const STORIES: Story[] = [
   {
     id: '2',
     user: 'Carlos Ruiz',
-    avatar: 'https://picsum.photos/50/50?random=2',
-    mediaUrl: 'https://picsum.photos/400/600?random=102',
+    avatar: '50/50?random=2',
+    mediaUrl: '400/600?random=102',
     location: 'Feria del Mezcal',
     likes: 89,
     description: 'Probando los mejores mezcales artesanales. 🥃'
@@ -49,8 +49,8 @@ export const STORIES: Story[] = [
   {
     id: '3',
     user: 'Viajeros Oax',
-    avatar: 'https://picsum.photos/50/50?random=3',
-    mediaUrl: 'https://picsum.photos/400/600?random=103',
+    avatar: '50/50?random=3',
+    mediaUrl: '400/600?random=103',
     location: 'Santo Domingo',
     likes: 1205,
     description: 'El desfile de delegaciones es impresionante. 😍'

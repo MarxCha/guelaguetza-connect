@@ -281,9 +281,9 @@ export const Timeline: React.FC<TimelineProps> = ({
   const typeColors: Record<string, string> = {
     default: 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400',
     success: 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400',
-    warning: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400',
+    warning: 'bg-oaxaca-yellow-light dark:bg-oaxaca-yellow/20 text-oaxaca-yellow dark:text-oaxaca-yellow',
     error: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400',
-    info: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
+    info: 'bg-oaxaca-sky-light dark:bg-oaxaca-sky/20 text-oaxaca-sky dark:text-oaxaca-sky',
   };
 
   const formatDate = (date: Date) => {
@@ -490,10 +490,10 @@ export const OrderTimeline: React.FC<OrderTimelineProps> = ({
     OrderStatus['status'],
     { label: string; icon: React.ReactNode; color: string }
   > = {
-    ordered: { label: 'Pedido realizado', icon: <Clock size={18} />, color: 'bg-blue-500' },
+    ordered: { label: 'Pedido realizado', icon: <Clock size={18} />, color: 'bg-oaxaca-sky' },
     confirmed: { label: 'Confirmado', icon: <Check size={18} />, color: 'bg-green-500' },
-    preparing: { label: 'En preparación', icon: <Clock size={18} />, color: 'bg-amber-500' },
-    shipped: { label: 'Enviado', icon: <Check size={18} />, color: 'bg-purple-500' },
+    preparing: { label: 'En preparación', icon: <Clock size={18} />, color: 'bg-oaxaca-yellow' },
+    shipped: { label: 'Enviado', icon: <Check size={18} />, color: 'bg-oaxaca-purple' },
     delivered: { label: 'Entregado', icon: <Check size={18} />, color: 'bg-green-500' },
     cancelled: { label: 'Cancelado', icon: <X size={18} />, color: 'bg-red-500' },
   };

@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { ViewState } from '../types';
 import { useAuth } from '../contexts/AuthContext';
+import GradientPlaceholder from './ui/GradientPlaceholder';
 
 interface GuideDashboardProps {
   onBack: () => void;
@@ -68,7 +69,7 @@ const MOCK_MESSAGES = [
   {
     id: '1',
     from: 'Sarah Johnson',
-    avatar: 'https://picsum.photos/seed/sarah/100',
+    avatar: 'sarah/100',
     message: 'Hola! Estamos emocionados por el tour de manana...',
     time: '10 min',
     unread: true,
@@ -76,7 +77,7 @@ const MOCK_MESSAGES = [
   {
     id: '2',
     from: 'Carlos Rodriguez',
-    avatar: 'https://picsum.photos/seed/carlos2/100',
+    avatar: 'carlos2/100',
     message: 'Gracias por la experiencia increible!',
     time: '2 hrs',
     unread: false,
@@ -84,7 +85,7 @@ const MOCK_MESSAGES = [
   {
     id: '3',
     from: 'Emma Wilson',
-    avatar: 'https://picsum.photos/seed/emma/100',
+    avatar: 'emma/100',
     message: 'Podemos agregar una persona mas al grupo?',
     time: '5 hrs',
     unread: true,
@@ -279,11 +280,15 @@ const GuideDashboard: React.FC<GuideDashboardProps> = ({ onBack, onNavigate }) =
                   msg.unread ? 'border-l-4 border-teal-500' : ''
                 }`}
               >
-                <img
-                  src={msg.avatar}
-                  alt={msg.from}
-                  className="w-12 h-12 rounded-full object-cover"
-                />
+                {msg.avatar ? (
+                  <img
+                    src={msg.avatar}
+                    alt={msg.from}
+                    className="w-12 h-12 rounded-full object-cover"
+                  />
+                ) : (
+                  <GradientPlaceholder variant="community" className="w-12 h-12 rounded-full" alt={msg.from} />
+                )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <h3 className="font-medium text-gray-900 dark:text-white">{msg.from}</h3>

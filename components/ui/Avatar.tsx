@@ -75,7 +75,7 @@ const Avatar: React.FC<AvatarProps> = ({
     online: 'bg-green-500',
     offline: 'bg-gray-400',
     busy: 'bg-red-500',
-    away: 'bg-amber-500',
+    away: 'bg-oaxaca-yellow',
   };
 
   const sizeConfig = sizes[size];
@@ -309,7 +309,7 @@ export const UserCard: React.FC<UserCardProps> = ({
             {user.name}
           </span>
           {user.verified && (
-            <Check size={14} className="flex-shrink-0 text-blue-500" />
+            <Check size={14} className="flex-shrink-0 text-oaxaca-sky" />
           )}
         </div>
         {user.subtitle && (
@@ -449,7 +449,7 @@ export const UserListItem: React.FC<UserListItemProps> = ({
             {user.name}
           </span>
           {user.verified && (
-            <Check size={14} className="flex-shrink-0 text-blue-500" />
+            <Check size={14} className="flex-shrink-0 text-oaxaca-sky" />
           )}
         </div>
         {user.subtitle && (
@@ -542,7 +542,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 {user.name}
               </h1>
               {user.verified && (
-                <Check size={18} className="text-blue-500" />
+                <Check size={18} className="text-oaxaca-sky" />
               )}
             </div>
             {user.username && (

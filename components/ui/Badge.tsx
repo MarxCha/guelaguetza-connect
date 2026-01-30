@@ -56,9 +56,9 @@ const Badge: React.FC<BadgeProps> = ({
     default: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
     secondary: 'bg-gray-200 text-gray-600 dark:bg-gray-600 dark:text-gray-300',
     success: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-    warning: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+    warning: 'bg-oaxaca-yellow-light text-oaxaca-yellow dark:bg-oaxaca-yellow/20 dark:text-oaxaca-yellow',
     danger: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-    info: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+    info: 'bg-oaxaca-sky-light text-oaxaca-sky dark:bg-oaxaca-sky/20 dark:text-oaxaca-sky',
     pink: 'bg-oaxaca-pink/10 text-oaxaca-pink',
   };
 
@@ -72,9 +72,9 @@ const Badge: React.FC<BadgeProps> = ({
     default: 'bg-gray-500',
     secondary: 'bg-gray-400',
     success: 'bg-green-500',
-    warning: 'bg-amber-500',
+    warning: 'bg-oaxaca-yellow',
     danger: 'bg-red-500',
-    info: 'bg-blue-500',
+    info: 'bg-oaxaca-sky',
     pink: 'bg-oaxaca-pink',
   };
 
@@ -206,8 +206,8 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
     online: { color: 'bg-green-500', label: 'En línea' },
     offline: { color: 'bg-gray-400', label: 'Desconectado' },
     busy: { color: 'bg-red-500', label: 'Ocupado' },
-    away: { color: 'bg-amber-500', label: 'Ausente' },
-    pending: { color: 'bg-amber-500', label: 'Pendiente', icon: <Clock size={12} /> },
+    away: { color: 'bg-oaxaca-yellow', label: 'Ausente' },
+    pending: { color: 'bg-oaxaca-yellow', label: 'Pendiente', icon: <Clock size={12} /> },
     approved: { color: 'bg-green-500', label: 'Aprobado', icon: <Check size={12} /> },
     rejected: { color: 'bg-red-500', label: 'Rechazado', icon: <X size={12} /> },
   };
@@ -309,17 +309,17 @@ export const FeatureBadge: React.FC<FeatureBadgeProps> = ({
     beta: {
       label: 'Beta',
       icon: <AlertCircle size={12} />,
-      colors: 'bg-purple-500 text-white',
+      colors: 'bg-oaxaca-purple text-white',
     },
     pro: {
       label: 'Pro',
       icon: <Star size={12} />,
-      colors: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white',
+      colors: 'bg-gradient-to-r from-oaxaca-yellow to-oaxaca-yellow text-white',
     },
     premium: {
       label: 'Premium',
       icon: <Crown size={12} />,
-      colors: 'bg-gradient-to-r from-oaxaca-pink to-purple-500 text-white',
+      colors: 'bg-gradient-to-r from-oaxaca-pink to-oaxaca-purple text-white',
     },
     popular: {
       label: 'Popular',
@@ -329,12 +329,12 @@ export const FeatureBadge: React.FC<FeatureBadgeProps> = ({
     featured: {
       label: 'Destacado',
       icon: <Star size={12} />,
-      colors: 'bg-amber-500 text-white',
+      colors: 'bg-oaxaca-yellow text-white',
     },
     verified: {
       label: 'Verificado',
       icon: <Shield size={12} />,
-      colors: 'bg-blue-500 text-white',
+      colors: 'bg-oaxaca-sky text-white',
     },
   };
 
@@ -552,7 +552,7 @@ export const AvatarWithBadge: React.FC<AvatarWithBadgeProps> = ({
     online: 'bg-green-500',
     offline: 'bg-gray-400',
     busy: 'bg-red-500',
-    away: 'bg-amber-500',
+    away: 'bg-oaxaca-yellow',
   };
 
   return (

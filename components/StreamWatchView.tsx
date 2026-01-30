@@ -17,6 +17,7 @@ import {
   CATEGORY_LABELS,
 } from '../services/streams';
 import LoadingSpinner from './ui/LoadingSpinner';
+import GradientPlaceholder from './ui/GradientPlaceholder';
 import { ViewState } from '../types';
 
 interface StreamWatchViewProps {
@@ -155,11 +156,15 @@ export default function StreamWatchView({
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
-            <img
-              src={stream.thumbnailUrl || `https://picsum.photos/800/450?random=${streamId}`}
-              alt={stream.title}
-              className="w-full h-full object-cover opacity-50"
-            />
+            {stream.thumbnailUrl ? (
+              <img
+                src={stream.thumbnailUrl}
+                alt={stream.title}
+                className="w-full h-full object-cover opacity-50"
+              />
+            ) : (
+              <GradientPlaceholder variant="stage" className="w-full h-full opacity-50" alt={stream.title} />
+            )}
             <div className="absolute inset-0 flex items-center justify-center">
               <p className="text-white text-lg">
                 {isLive ? 'Conectando...' : 'Stream no disponible'}

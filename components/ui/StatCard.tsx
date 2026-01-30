@@ -21,10 +21,10 @@ const StatCard: React.FC<StatCardProps> = ({
     purple: 'bg-oaxaca-purple/10 text-oaxaca-purple',
     yellow: 'bg-oaxaca-yellow/10 text-oaxaca-yellow',
     green: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
-    blue: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
+    blue: 'bg-oaxaca-sky-light text-oaxaca-sky dark:bg-oaxaca-sky/20 dark:text-oaxaca-sky',
     red: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
-    indigo: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
-    orange: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400',
+    indigo: 'bg-oaxaca-purple-light text-oaxaca-purple dark:bg-oaxaca-purple/20 dark:text-oaxaca-purple',
+    orange: 'bg-oaxaca-yellow-light text-oaxaca-yellow dark:bg-oaxaca-yellow/20 dark:text-oaxaca-yellow',
   };
 
   const getChangeIcon = () => {

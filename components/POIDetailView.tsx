@@ -13,6 +13,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import LoadingSpinner from './ui/LoadingSpinner';
+import GradientPlaceholder from './ui/GradientPlaceholder';
 import {
   getPOI,
   toggleFavorite,
@@ -134,11 +135,15 @@ export default function POIDetailView({ poiId, onNavigate, onBack }: POIDetailVi
     <div className="flex flex-col h-full bg-white">
       {/* Header Image */}
       <div className="relative h-64">
-        <img
-          src={poi.imageUrl || `https://picsum.photos/800/400?random=${poiId}`}
-          alt={poi.name}
-          className="w-full h-full object-cover"
-        />
+        {poi.imageUrl ? (
+          <img
+            src={poi.imageUrl}
+            alt={poi.name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <GradientPlaceholder variant="community" className="w-full h-full" alt={poi.name} />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30" />
 
         {/* Navigation */}

@@ -157,7 +157,7 @@ export async function getUpcomingStreams() {
         userId: 'host_1',
         title: 'Clase de Baile Folklórico - Flor de Piña',
         description: 'Aprende los pasos básicos del tradicional baile Flor de Piña de Tuxtepec',
-        thumbnailUrl: 'https://picsum.photos/seed/dance1/400/225',
+        thumbnailUrl: '',
         category: 'DANZA' as StreamCategory,
         status: 'SCHEDULED' as StreamStatus,
         scheduledAt: tomorrow.toISOString(),
@@ -173,7 +173,7 @@ export async function getUpcomingStreams() {
           id: 'host_1',
           nombre: 'María',
           apellido: 'López',
-          avatar: 'https://randomuser.me/api/portraits/women/28.jpg',
+          avatar: '',
         },
       },
       {
@@ -181,7 +181,7 @@ export async function getUpcomingStreams() {
         userId: 'host_2',
         title: 'Taller de Mezcal - Destilación Tradicional',
         description: 'Conoce el proceso artesanal de elaboración del mezcal oaxaqueño',
-        thumbnailUrl: 'https://picsum.photos/seed/mezcal1/400/225',
+        thumbnailUrl: '',
         category: 'ARTESANIA' as StreamCategory,
         status: 'SCHEDULED' as StreamStatus,
         scheduledAt: new Date(tomorrow.getTime() + 3 * 60 * 60 * 1000).toISOString(),
@@ -197,7 +197,7 @@ export async function getUpcomingStreams() {
           id: 'host_2',
           nombre: 'José',
           apellido: 'García',
-          avatar: 'https://randomuser.me/api/portraits/men/45.jpg',
+          avatar: '',
         },
       },
     ];
@@ -234,7 +234,7 @@ export async function getStream(id: string) {
       userId: 'host_1',
       title: 'Stream Demo',
       description: 'Una transmisión de demostración',
-      thumbnailUrl: `https://picsum.photos/seed/${id}/400/225`,
+      thumbnailUrl: '',
       category: 'OTRO' as StreamCategory,
       status: 'LIVE' as StreamStatus,
       scheduledAt: null,
@@ -250,7 +250,7 @@ export async function getStream(id: string) {
         id: 'host_1',
         nombre: 'Host',
         apellido: 'Demo',
-        avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
+        avatar: '',
       },
     };
 
@@ -266,7 +266,7 @@ export async function getStream(id: string) {
           user: {
             id: 'user_1',
             nombre: 'Ana',
-            avatar: 'https://randomuser.me/api/portraits/women/23.jpg',
+            avatar: '',
           },
         },
         {
@@ -278,7 +278,7 @@ export async function getStream(id: string) {
           user: {
             id: 'user_2',
             nombre: 'Carlos',
-            avatar: 'https://randomuser.me/api/portraits/men/44.jpg',
+            avatar: '',
           },
         },
         {
@@ -290,7 +290,7 @@ export async function getStream(id: string) {
           user: {
             id: 'user_3',
             nombre: 'Laura',
-            avatar: 'https://randomuser.me/api/portraits/women/55.jpg',
+            avatar: '',
           },
         },
       ],

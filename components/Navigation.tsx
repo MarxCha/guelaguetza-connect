@@ -21,17 +21,17 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, setView, onUserPro
 
   // Main nav items for mobile (4 items + More button)
   const mobileNavItems = [
-    { view: ViewState.HOME, icon: Home, label: 'Inicio' },
+    { view: ViewState.HOME, icon: '/images/ui/icon_home.png', label: 'Inicio', isImage: true },
     { view: ViewState.PROGRAM, icon: CalendarDays, label: 'Programa' },
-    { view: ViewState.TIENDA, icon: ShoppingBag, label: 'Tienda' },
+    { view: ViewState.TIENDA, icon: '/images/ui/icon_market.png', label: 'Tienda', isImage: true },
     { view: ViewState.PROFILE, icon: User, label: 'Perfil' },
   ];
 
   // Items shown in desktop sidebar - all main items
   const mainNavItems = [
-    { view: ViewState.HOME, icon: Home, label: 'Inicio' },
+    { view: ViewState.HOME, icon: '/images/ui/icon_home.png', label: 'Inicio', isImage: true },
     { view: ViewState.PROGRAM, icon: CalendarDays, label: 'Programa' },
-    { view: ViewState.TIENDA, icon: ShoppingBag, label: 'Tienda' },
+    { view: ViewState.TIENDA, icon: '/images/ui/icon_market.png', label: 'Tienda', isImage: true },
     { view: ViewState.SEARCH, icon: Search, label: 'Buscar' },
     { view: ViewState.PROFILE, icon: User, label: 'Perfil' },
   ];
@@ -41,9 +41,9 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, setView, onUserPro
     { view: ViewState.TRANSPORT, icon: Bus, label: 'BinniBus' },
     { view: ViewState.STREAMS, icon: Radio, label: 'En Vivo' },
     { view: ViewState.SMART_MAP, icon: Map, label: 'Mapa' },
-    { view: ViewState.EXPERIENCES, icon: Ticket, label: 'Tours' },
+    { view: ViewState.EXPERIENCES, icon: '/images/ui/icon_events.png', label: 'Tours', isImage: true },
     { view: ViewState.COMMUNITIES, icon: Users, label: 'Comunidad' },
-    { view: ViewState.AR_SCANNER, icon: Camera, label: 'AR Scanner' },
+    { view: ViewState.AR_SCANNER, icon: '/images/ui/icon_ar.png', label: 'AR Scanner', isImage: true },
     { view: ViewState.CHAT, icon: MessageCircle, label: 'GuelaBot' },
   ];
 
@@ -86,17 +86,22 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, setView, onUserPro
                   onClick={() => handleNavClick(item.view)}
                   aria-label={item.label}
                   aria-current={isActive ? 'page' : undefined}
-                  className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl transition-all ${
-                    isActive
-                      ? 'bg-oaxaca-pink/10 text-oaxaca-pink font-medium'
-                      : 'text-gray-600 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'
-                  }`}
+                  className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl transition-all ${isActive
+                    ? 'bg-oaxaca-pink/10 text-oaxaca-pink font-medium'
+                    : 'text-gray-600 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'
+                    }`}
                 >
                   {isProfile && isAuthenticated && user?.faceData ? (
                     <img
                       src={user.faceData}
                       alt="Perfil"
                       className={`w-5 h-5 rounded-full object-cover ${isActive ? 'ring-2 ring-oaxaca-pink' : ''}`}
+                    />
+                  ) : item.isImage ? (
+                    <img
+                      src={item.icon as string}
+                      alt={item.label}
+                      className={`w-5 h-5 object-contain ${isActive ? 'brightness-100' : 'brightness-0 opacity-60 dark:invert'}`}
                     />
                   ) : (
                     <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} aria-hidden="true" />
@@ -118,13 +123,20 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, setView, onUserPro
                   onClick={() => handleNavClick(item.view)}
                   aria-label={item.label}
                   aria-current={isActive ? 'page' : undefined}
-                  className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl transition-all ${
-                    isActive
-                      ? 'bg-oaxaca-pink/10 text-oaxaca-pink font-medium'
-                      : 'text-gray-600 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'
-                  }`}
+                  className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl transition-all ${isActive
+                    ? 'bg-oaxaca-pink/10 text-oaxaca-pink font-medium'
+                    : 'text-gray-600 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'
+                    }`}
                 >
-                  <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} aria-hidden="true" />
+                  {item.isImage ? (
+                    <img
+                      src={item.icon as string}
+                      alt={item.label}
+                      className={`w-5 h-5 object-contain ${isActive ? 'brightness-100' : 'brightness-0 opacity-60 dark:invert'}`}
+                    />
+                  ) : (
+                    <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} aria-hidden="true" />
+                  )}
                   <span className="text-sm">{item.label}</span>
                 </button>
               );
@@ -224,18 +236,24 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, setView, onUserPro
                       handleNavClick(item.view);
                       setShowMoreMenu(false);
                     }}
-                    className={`flex flex-col items-center justify-center p-3 rounded-2xl transition-all ${
-                      isActive
-                        ? 'bg-oaxaca-pink/10 text-oaxaca-pink'
-                        : 'text-gray-600 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'
-                    }`}
+                    className={`flex flex-col items-center justify-center p-3 rounded-2xl transition-all ${isActive
+                      ? 'bg-oaxaca-pink/10 text-oaxaca-pink'
+                      : 'text-gray-600 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'
+                      }`}
                   >
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-2 ${
-                      isActive
-                        ? 'bg-oaxaca-pink/20'
-                        : 'bg-gray-100 dark:bg-gray-800'
-                    }`}>
-                      <item.icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-2 ${isActive
+                      ? 'bg-oaxaca-pink/20'
+                      : 'bg-gray-100 dark:bg-gray-800'
+                      }`}>
+                      {item.isImage ? (
+                        <img
+                          src={item.icon as string}
+                          alt={item.label}
+                          className={`w-6 h-6 object-contain ${isActive ? 'brightness-100' : 'brightness-0 opacity-60 dark:invert'}`}
+                        />
+                      ) : (
+                        <item.icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+                      )}
                     </div>
                     <span className="text-xs font-medium text-center leading-tight">{item.label}</span>
                   </button>
@@ -271,9 +289,8 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, setView, onUserPro
                 onClick={() => handleNavClick(item.view)}
                 aria-label={item.label}
                 aria-current={isActive ? 'page' : undefined}
-                className={`flex flex-col items-center justify-center w-full h-full min-h-[48px] transition-colors duration-200 focus-visible:bg-gray-100 dark:focus-visible:bg-gray-800 focus-visible:outline-none ${
-                  isActive ? 'text-oaxaca-pink' : 'text-gray-500 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
-                }`}
+                className={`flex flex-col items-center justify-center w-full h-full min-h-[48px] transition-colors duration-200 focus-visible:bg-gray-100 dark:focus-visible:bg-gray-800 focus-visible:outline-none ${isActive ? 'text-oaxaca-pink' : 'text-gray-500 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
+                  }`}
               >
                 {isProfile && isAuthenticated && user?.faceData ? (
                   <div className="relative">
@@ -287,6 +304,12 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, setView, onUserPro
                   <div className="relative">
                     <item.icon size={24} strokeWidth={isActive ? 2.5 : 2} />
                   </div>
+                ) : item.isImage ? (
+                  <img
+                    src={item.icon as string}
+                    alt={item.label}
+                    className={`w-6 h-6 object-contain mb-0.5 ${isActive ? 'brightness-100' : 'brightness-0 opacity-60 dark:invert'}`}
+                  />
                 ) : (
                   <item.icon size={24} strokeWidth={isActive ? 2.5 : 2} />
                 )}
@@ -304,9 +327,8 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, setView, onUserPro
             aria-label="Mas opciones"
             aria-expanded={showMoreMenu}
             aria-haspopup="dialog"
-            className={`flex flex-col items-center justify-center w-full h-full min-h-[48px] transition-colors duration-200 focus-visible:bg-gray-100 dark:focus-visible:bg-gray-800 focus-visible:outline-none ${
-              isMoreActive ? 'text-oaxaca-pink' : 'text-gray-500 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
-            }`}
+            className={`flex flex-col items-center justify-center w-full h-full min-h-[48px] transition-colors duration-200 focus-visible:bg-gray-100 dark:focus-visible:bg-gray-800 focus-visible:outline-none ${isMoreActive ? 'text-oaxaca-pink' : 'text-gray-500 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
+              }`}
           >
             <MoreHorizontal size={24} strokeWidth={isMoreActive ? 2.5 : 2} aria-hidden="true" />
             <span className="text-[10px] sm:text-xs font-medium mt-1">Mas</span>

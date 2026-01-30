@@ -17,6 +17,7 @@ import {
 import { ViewState } from '../types';
 import EmptyState from './ui/EmptyState';
 import LoadingSpinner from './ui/LoadingSpinner';
+import GradientPlaceholder from './ui/GradientPlaceholder';
 import { useToast } from './ui/Toast';
 
 interface WishlistViewProps {
@@ -119,7 +120,7 @@ export default function WishlistView({ onNavigate, onBack }: WishlistViewProps) 
           ) : (
             <div className="space-y-4">
               {products.map((product) => {
-                const mainImage = product.images[0] || `https://picsum.photos/150/150?random=${product.id}`;
+                const mainImage = product.images[0] || '';
                 const isRemoving = removingId === product.id;
                 const isAddingToCart = addingToCartId === product.id;
 
@@ -136,11 +137,15 @@ export default function WishlistView({ onNavigate, onBack }: WishlistViewProps) 
                         onClick={() => handleProductClick(product)}
                         className="w-32 h-32 md:w-40 md:h-40 flex-shrink-0 cursor-pointer"
                       >
-                        <img
-                          src={mainImage}
-                          alt={product.name}
-                          className="w-full h-full object-cover"
-                        />
+                        {mainImage ? (
+                          <img
+                            src={mainImage}
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <GradientPlaceholder variant="shop" className="w-full h-full" alt={product.name} />
+                        )}
                       </div>
 
                       {/* Details */}

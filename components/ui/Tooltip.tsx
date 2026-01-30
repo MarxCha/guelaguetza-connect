@@ -401,9 +401,9 @@ export const InfoTooltip: React.FC<InfoTooltipProps> = ({
   };
 
   const colors = {
-    info: 'text-blue-500',
+    info: 'text-oaxaca-sky',
     help: 'text-gray-400',
-    warning: 'text-amber-500',
+    warning: 'text-oaxaca-yellow',
     success: 'text-green-500',
   };
 

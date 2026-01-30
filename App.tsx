@@ -449,7 +449,7 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-gray-100 dark:bg-gray-950 font-sans transition-colors">
       {/* Demo Mode Indicator */}
       {isDemoMode && !adminViewingAsUser && (
-        <div className="fixed top-0 left-0 right-0 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs py-1.5 px-4 z-50 flex items-center justify-between">
+        <div className="fixed top-0 left-0 right-0 bg-gradient-to-r from-oaxaca-sky to-oaxaca-purple text-white text-xs py-1.5 px-4 z-50 flex items-center justify-between">
           <span className="hidden sm:inline">Modo Demo: {user?.nombre}</span>
           <span className="sm:hidden">Demo</span>
           <DemoUserSelector
@@ -469,7 +469,7 @@ const App: React.FC = () => {
 
       {/* Admin Viewing as User Banner */}
       {adminViewingAsUser && user?.role === 'ADMIN' && (
-        <div className="fixed top-0 left-0 right-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs py-2 px-4 z-50 flex items-center justify-between">
+        <div className="fixed top-0 left-0 right-0 bg-gradient-to-r from-oaxaca-purple to-oaxaca-pink text-white text-xs py-2 px-4 z-50 flex items-center justify-between">
           <span className="flex items-center gap-2">
             <Eye size={14} />
             <span className="hidden sm:inline">Modo Vista de Usuario - Administrador</span>
