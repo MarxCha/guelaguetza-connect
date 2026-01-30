@@ -1,5 +1,7 @@
 import Fastify, { FastifyInstance, FastifyError } from 'fastify';
+import compress from '@fastify/compress';
 import cors from '@fastify/cors';
+import helmet from '@fastify/helmet';
 import multipart from '@fastify/multipart';
 import websocket from '@fastify/websocket';
 import rawBody from 'fastify-raw-body';
@@ -58,9 +60,19 @@ export async function buildApp(): Promise<FastifyInstance> {
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
 
+  // Register security headers
+  await app.register(helmet, {
+    contentSecurityPolicy: false, // Disable CSP for API-only backend
+  });
+
+  // Register response compression
+  await app.register(compress, { global: true });
+
   // Register CORS
   await app.register(cors, {
-    origin: true,
+    origin: process.env.NODE_ENV === 'production'
+      ? (process.env.CORS_ORIGINS || 'https://guelaguetzaconnect.com').split(',')
+      : true,
     credentials: true,
   });
 

@@ -407,7 +407,7 @@ async function handleOrderPaymentSucceeded(
           : 'Vendedor',
         paymentId: paymentIntent.id,
         amount: paymentIntent.amount / 100,
-        items: order.items.map((item) => ({
+        items: order.items.map((item: any) => ({
           productId: item.productId,
           productName: item.product?.name || 'Producto',
           quantity: item.quantity,
@@ -501,8 +501,25 @@ async function handleBookingPaymentFailed(
     'Booking marked as PAYMENT_FAILED'
   );
 
-  // TODO: Enviar notificación al usuario
-  // await notificationService.notifyBookingPaymentFailed(booking);
+  // Notificar al usuario del fallo de pago via EventBus
+  if (fastify.eventBus) {
+    const experience = await fastify.prisma.experience.findUnique({
+      where: { id: booking.experienceId },
+      select: { title: true, hostId: true },
+    });
+    fastify.eventBus.emitAsync(
+      createEvent(EventTypes.BOOKING_CANCELLED, {
+        bookingId,
+        userId: booking.userId,
+        experienceId: booking.experienceId,
+        experienceTitle: experience?.title || 'Experiencia',
+        hostId: experience?.hostId || '',
+        reason: `Pago fallido: ${paymentIntent.last_payment_error?.message || 'Error desconocido'}`,
+        cancelledBy: 'system',
+        guestCount: booking.guestCount,
+      })
+    );
+  }
 }
 
 /**
@@ -552,8 +569,12 @@ async function handleOrderPaymentFailed(
     'Order marked as PAYMENT_FAILED'
   );
 
-  // TODO: Enviar notificación al usuario
-  // await notificationService.notifyOrderPaymentFailed(order);
+  // Notificar al usuario del fallo de pago
+  // TODO: Agregar ORDER_PAYMENT_FAILED event type para notificaciones mas especificas
+  fastify.log.warn(
+    { orderId, userId: order.userId, error: paymentIntent.last_payment_error?.message },
+    'Order payment failed - notification sent via log (needs ORDER_PAYMENT_FAILED event type)'
+  );
 }
 
 /**
@@ -673,8 +694,25 @@ async function handleBookingRefunded(
     'Booking refunded and cancelled successfully'
   );
 
-  // TODO: Enviar notificación al usuario
-  // await notificationService.notifyBookingRefunded(booking);
+  // Notificar al usuario del reembolso via EventBus
+  if (fastify.eventBus) {
+    const experience = await fastify.prisma.experience.findUnique({
+      where: { id: booking.experienceId },
+      select: { title: true, hostId: true },
+    });
+    fastify.eventBus.emitAsync(
+      createEvent(EventTypes.BOOKING_CANCELLED, {
+        bookingId,
+        userId: booking.userId,
+        experienceId: booking.experienceId,
+        experienceTitle: experience?.title || 'Experiencia',
+        hostId: experience?.hostId || '',
+        reason: 'Reembolso procesado',
+        cancelledBy: 'system',
+        guestCount: booking.guestCount,
+      })
+    );
+  }
 }
 
 /**
@@ -701,25 +739,41 @@ async function handleOrderRefunded(
     return;
   }
 
-  // Marcar orden como REFUNDED
-  await fastify.prisma.order.update({
-    where: { id: orderId },
-    data: {
-      status: 'REFUNDED',
-    },
+  // Restaurar inventario y marcar como REFUNDED en una transacción
+  await fastify.prisma.$transaction(async (tx: any) => {
+    // Restaurar stock de cada producto
+    for (const item of order.items) {
+      await tx.product.update({
+        where: { id: item.productId },
+        data: {
+          stock: { increment: item.quantity },
+        },
+      });
+    }
+
+    // Marcar orden como REFUNDED
+    await tx.order.update({
+      where: { id: orderId },
+      data: {
+        status: 'REFUNDED',
+      },
+    });
   });
 
   fastify.log.info(
     {
       orderId,
       amountRefunded: charge.amount_refunded / 100,
+      itemsRestored: order.items.map((i: any) => ({ productId: i.productId, quantity: i.quantity })),
     },
-    'Order marked as REFUNDED successfully'
+    'Order refunded and inventory restored successfully'
   );
 
-  // TODO: Restaurar inventario de productos
-  // TODO: Enviar notificación al usuario y vendedor
-  // await notificationService.notifyOrderRefunded(order);
+  // TODO: Agregar ORDER_REFUNDED event type para notificaciones de reembolso
+  fastify.log.info(
+    { orderId, userId: order.userId, sellerId: order.sellerId },
+    'Order refund notification pending (needs ORDER_REFUNDED event type)'
+  );
 }
 
 export default webhooksRoutes;

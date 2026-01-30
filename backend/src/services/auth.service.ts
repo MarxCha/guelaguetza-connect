@@ -47,12 +47,24 @@ const BCRYPT_SALT_ROUNDS = 12;
 
 // Convertir secrets a Uint8Array (requerido por jose)
 const getAccessTokenSecret = (): Uint8Array => {
-  const secret = process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET || 'fallback-access-secret';
+  const secret = process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === 'test') {
+      return new TextEncoder().encode('test-access-secret-do-not-use-in-production');
+    }
+    throw new Error('JWT_ACCESS_SECRET or JWT_SECRET environment variable is required');
+  }
   return new TextEncoder().encode(secret);
 };
 
 const getRefreshTokenSecret = (): Uint8Array => {
-  const secret = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET || 'fallback-refresh-secret';
+  const secret = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === 'test') {
+      return new TextEncoder().encode('test-refresh-secret-do-not-use-in-production');
+    }
+    throw new Error('JWT_REFRESH_SECRET or JWT_SECRET environment variable is required');
+  }
   return new TextEncoder().encode(secret);
 };
 
