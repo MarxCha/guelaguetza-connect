@@ -47,7 +47,7 @@ const DISCOVER_SLIDES: DiscoverySlide[] = [
     id: 'gastro',
     tag: 'Guía culinaria',
     title: 'Gastronomía',
-    image: '/images/product_mezcal.png',
+    image: '/images/gastro_tlayuda_dish.png',
     action: 'gastro',
   },
   {
@@ -61,14 +61,14 @@ const DISCOVER_SLIDES: DiscoverySlide[] = [
     id: 'mezcal',
     tag: 'Tradición ancestral',
     title: 'Mezcal',
-    image: '/images/product_mezcal.png',
+    image: '/images/experience_mezcal_tasting.png',
     action: 'gastro',
   },
   {
     id: 'danzas',
     tag: 'Folklore vivo',
     title: 'Danzas',
-    image: '/images/dance_flor_de_pina.png',
+    image: '/images/dance_tehuana.png',
     action: 'programa',
   },
   {
@@ -244,44 +244,36 @@ const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div
                 onClick={() => setView(ViewState.TRANSPORT)}
-                className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 active:scale-95 transition cursor-pointer hover:shadow-md"
+                className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 active:scale-95 transition cursor-pointer hover:shadow-lg hover:-translate-y-0.5"
               >
-                <div className="bg-oaxaca-sky-light dark:bg-oaxaca-sky/20 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-oaxaca-sky dark:text-oaxaca-sky mb-3">
-                  <MapPin size={20} className="md:w-6 md:h-6" />
-                </div>
+                <img src="/images/ui/icon_transport.png" alt="Transporte" className="w-14 h-14 md:w-16 md:h-16 object-contain mb-3 drop-shadow-md" />
                 <h3 className="font-bold text-gray-800 dark:text-gray-100">{t('transport')}</h3>
                 <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1">{t('safe_routes')}</p>
               </div>
 
               <div
                 onClick={() => setView(ViewState.AR_SCANNER)}
-                className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 active:scale-95 transition cursor-pointer hover:shadow-md"
+                className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 active:scale-95 transition cursor-pointer hover:shadow-lg hover:-translate-y-0.5"
               >
-                <div className="bg-oaxaca-purple-light dark:bg-oaxaca-purple/20 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-oaxaca-purple dark:text-oaxaca-pink mb-3">
-                  <Camera size={20} className="md:w-6 md:h-6" />
-                </div>
+                <img src="/images/ui/icon_ar.png" alt="Museo AR" className="w-14 h-14 md:w-16 md:h-16 object-contain mb-3 drop-shadow-md" />
                 <h3 className="font-bold text-gray-800 dark:text-gray-100">{t('ar_museum')}</h3>
                 <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1">{t('discover_magic')}</p>
               </div>
 
               <div
                 onClick={() => setView(ViewState.STORIES)}
-                className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 active:scale-95 transition cursor-pointer hover:shadow-md"
+                className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 active:scale-95 transition cursor-pointer hover:shadow-lg hover:-translate-y-0.5"
               >
-                <div className="bg-oaxaca-pink-light dark:bg-oaxaca-pink/20 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-oaxaca-pink dark:text-oaxaca-pink mb-3">
-                  <PlayCircle size={20} className="md:w-6 md:h-6" />
-                </div>
+                <img src="/images/ui/icon_home.png" alt="Historias" className="w-14 h-14 md:w-16 md:h-16 object-contain mb-3 drop-shadow-md" />
                 <h3 className="font-bold text-gray-800 dark:text-gray-100">{t('stories')}</h3>
                 <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1">{t('live_moments')}</p>
               </div>
 
               <div
                 onClick={() => setView(ViewState.PROGRAM)}
-                className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 active:scale-95 transition cursor-pointer hover:shadow-md"
+                className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 active:scale-95 transition cursor-pointer hover:shadow-lg hover:-translate-y-0.5"
               >
-                <div className="bg-oaxaca-yellow-light dark:bg-oaxaca-yellow/20 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-oaxaca-yellow dark:text-oaxaca-yellow mb-3">
-                  <Calendar size={20} className="md:w-6 md:h-6" />
-                </div>
+                <img src="/images/ui/icon_events.png" alt="Programa" className="w-14 h-14 md:w-16 md:h-16 object-contain mb-3 drop-shadow-md" />
                 <h3 className="font-bold text-gray-800 dark:text-gray-100">{t('program')}</h3>
                 <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1">{t('complete_calendar')}</p>
               </div>
@@ -293,40 +285,36 @@ const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
               <div className="grid grid-cols-4 md:grid-cols-4 gap-3 md:gap-4">
                 <div
                   onClick={() => setView(ViewState.TIENDA)}
-                  className="flex flex-col items-center p-3 md:p-4 bg-oaxaca-yellow-light dark:bg-oaxaca-yellow/20 rounded-xl cursor-pointer hover:bg-oaxaca-yellow/30 transition active:scale-95"
+                  className="flex flex-col items-center p-3 md:p-4 bg-oaxaca-yellow-light dark:bg-oaxaca-yellow/20 rounded-2xl cursor-pointer hover:bg-oaxaca-yellow/30 transition active:scale-95"
                 >
-                  <div className="bg-oaxaca-yellow p-2.5 md:p-3 rounded-full text-white mb-2">
-                    <ShoppingBag size={18} className="md:w-5 md:h-5" />
-                  </div>
+                  <img src="/images/ui/icon_market.png" alt="Tienda" className="w-11 h-11 md:w-14 md:h-14 object-contain mb-2 drop-shadow-sm" />
                   <span className="text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300">{t('shop')}</span>
                 </div>
 
                 <div
                   onClick={() => setView(ViewState.STREAMS)}
-                  className="flex flex-col items-center p-3 md:p-4 bg-red-50 dark:bg-red-900/20 rounded-xl cursor-pointer hover:bg-red-100 transition active:scale-95"
+                  className="flex flex-col items-center p-3 md:p-4 bg-red-50 dark:bg-red-900/20 rounded-2xl cursor-pointer hover:bg-red-100 transition active:scale-95"
                 >
-                  <div className="bg-red-500 p-2.5 md:p-3 rounded-full text-white mb-2">
-                    <Radio size={18} className="md:w-5 md:h-5" />
+                  <div className="bg-red-500 w-11 h-11 md:w-14 md:h-14 rounded-full flex items-center justify-center text-white mb-2">
+                    <Radio size={22} className="md:w-7 md:h-7" />
                   </div>
                   <span className="text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300">{t('streams')}</span>
                 </div>
 
                 <div
                   onClick={() => setView(ViewState.EXPERIENCES)}
-                  className="flex flex-col items-center p-3 md:p-4 bg-oaxaca-purple-light dark:bg-oaxaca-purple/20 rounded-xl cursor-pointer hover:bg-oaxaca-purple/30 transition active:scale-95"
+                  className="flex flex-col items-center p-3 md:p-4 bg-oaxaca-purple-light dark:bg-oaxaca-purple/20 rounded-2xl cursor-pointer hover:bg-oaxaca-purple/30 transition active:scale-95"
                 >
-                  <div className="bg-oaxaca-purple p-2.5 md:p-3 rounded-full text-white mb-2">
-                    <Ticket size={18} className="md:w-5 md:h-5" />
-                  </div>
+                  <img src="/images/ui/icon_events.png" alt="Tours" className="w-11 h-11 md:w-14 md:h-14 object-contain mb-2 drop-shadow-sm" />
                   <span className="text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300">{t('tours')}</span>
                 </div>
 
                 <div
                   onClick={() => setView(ViewState.SMART_MAP)}
-                  className="flex flex-col items-center p-3 md:p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl cursor-pointer hover:bg-emerald-100 transition active:scale-95"
+                  className="flex flex-col items-center p-3 md:p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl cursor-pointer hover:bg-emerald-100 transition active:scale-95"
                 >
-                  <div className="bg-emerald-500 p-2.5 md:p-3 rounded-full text-white mb-2">
-                    <Map size={18} className="md:w-5 md:h-5" />
+                  <div className="bg-emerald-500 w-11 h-11 md:w-14 md:h-14 rounded-full flex items-center justify-center text-white mb-2">
+                    <Map size={22} className="md:w-7 md:h-7" />
                   </div>
                   <span className="text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300">{t('plan')}</span>
                 </div>
@@ -341,9 +329,7 @@ const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
                   onClick={() => setView(ViewState.EVENTS)}
                   className="bg-gradient-to-br from-oaxaca-pink to-oaxaca-purple p-4 md:p-5 rounded-xl shadow-md cursor-pointer hover:shadow-lg transition active:scale-[0.98] text-white"
                 >
-                  <div className="bg-white/20 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mb-3">
-                    <CalendarDays size={20} className="md:w-6 md:h-6" />
-                  </div>
+                  <img src="/images/ui/icon_events.png" alt="Eventos" className="w-12 h-12 md:w-14 md:h-14 object-contain mb-3 drop-shadow-lg" />
                   <h3 className="font-bold">{t('events')}</h3>
                   <p className="text-xs md:text-sm text-white/80 mt-1">{t('complete_calendar')}</p>
                 </div>
@@ -352,9 +338,7 @@ const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
                   onClick={() => setView(ViewState.COMMUNITIES)}
                   className="bg-gradient-to-br from-oaxaca-purple to-oaxaca-pink p-4 md:p-5 rounded-xl shadow-md cursor-pointer hover:shadow-lg transition active:scale-[0.98] text-white"
                 >
-                  <div className="bg-white/20 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mb-3">
-                    <Users size={20} className="md:w-6 md:h-6" />
-                  </div>
+                  <img src="/images/ui/icon_community.png" alt="Comunidades" className="w-12 h-12 md:w-14 md:h-14 object-contain mb-3 drop-shadow-lg" />
                   <h3 className="font-bold">{t('communities')}</h3>
                   <p className="text-xs md:text-sm text-white/80 mt-1">{t('community_groups')}</p>
                 </div>

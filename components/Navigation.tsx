@@ -38,11 +38,11 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, setView, onUserPro
 
   // Extra items for sidebar "Explorar" section
   const extraNavItems = [
-    { view: ViewState.TRANSPORT, icon: Bus, label: 'BinniBus' },
+    { view: ViewState.TRANSPORT, icon: '/images/ui/icon_transport.png', label: 'BinniBus', isImage: true },
     { view: ViewState.STREAMS, icon: Radio, label: 'En Vivo' },
     { view: ViewState.SMART_MAP, icon: Map, label: 'Mapa' },
     { view: ViewState.EXPERIENCES, icon: '/images/ui/icon_events.png', label: 'Tours', isImage: true },
-    { view: ViewState.COMMUNITIES, icon: Users, label: 'Comunidad' },
+    { view: ViewState.COMMUNITIES, icon: '/images/ui/icon_community.png', label: 'Comunidad', isImage: true },
     { view: ViewState.AR_SCANNER, icon: '/images/ui/icon_ar.png', label: 'AR Scanner', isImage: true },
     { view: ViewState.CHAT, icon: MessageCircle, label: 'GuelaBot' },
   ];

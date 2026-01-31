@@ -77,7 +77,14 @@
       "Bash(find:*)",
       "Bash(open:*)",
       "Bash(xargs:*)",
-      "Bash(git status:*)"
+      "Bash(git status:*)",
+      "Bash(node:*)",
+      "Bash(npm --version:*)",
+      "Bash(docker info:*)",
+      "Bash(docker ps:*)",
+      "Bash(docker exec:*)",
+      "Bash(PGPASSWORD=password psql:*)",
+      "Bash(PGPASSWORD=postgres psql:*)"
     ]
   }
 }

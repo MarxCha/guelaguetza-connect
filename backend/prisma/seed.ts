@@ -194,8 +194,8 @@ async function main() {
         name: 'Amantes del Mezcal',
         slug: 'amantes-del-mezcal',
         description: 'Comunidad para quienes aprecian el mezcal artesanal oaxaqueño. Compartimos recomendaciones, historias y experiencias.',
-        imageUrl: 'https://picsum.photos/200/200?random=201',
-        coverUrl: 'https://picsum.photos/800/300?random=201',
+        imageUrl: '/images/product_mezcal.png',
+        coverUrl: '/images/product_mezcal.png',
         isPublic: true,
         createdById: adminUser.id,
         members: {
@@ -211,8 +211,8 @@ async function main() {
         name: 'Danzas Tradicionales',
         slug: 'danzas-tradicionales',
         description: 'Espacio para compartir la pasión por las danzas tradicionales de las 8 regiones de Oaxaca.',
-        imageUrl: 'https://picsum.photos/200/200?random=202',
-        coverUrl: 'https://picsum.photos/800/300?random=202',
+        imageUrl: '/images/dance_pluma.png',
+        coverUrl: '/images/dance_pluma.png',
         isPublic: true,
         createdById: demoUser.id,
         members: {
@@ -227,8 +227,8 @@ async function main() {
         name: 'Fotografía Guelaguetza',
         slug: 'fotografia-guelaguetza',
         description: 'Fotógrafos profesionales y aficionados compartiendo las mejores tomas del festival.',
-        imageUrl: 'https://picsum.photos/200/200?random=203',
-        coverUrl: 'https://picsum.photos/800/300?random=203',
+        imageUrl: '/images/poi_auditorio_guelaguetza.png',
+        coverUrl: '/images/poi_auditorio_guelaguetza.png',
         isPublic: true,
         createdById: adminUser.id,
         members: {
@@ -342,7 +342,7 @@ async function main() {
         category: ProductCategory.TEXTIL,
         status: ProductStatus.ACTIVE,
         stock: 3,
-        images: ['/images/product_textiles.png'],
+        images: ['/images/textil_rebozo.png'],
       },
     }),
     prisma.product.create({
@@ -378,7 +378,7 @@ async function main() {
         category: ProductCategory.MEZCAL,
         status: ProductStatus.ACTIVE,
         stock: 10,
-        images: ['/images/product_mezcal.png'],
+        images: ['/images/product_mezcal_tobala.png'],
       },
     }),
     prisma.product.create({
@@ -390,7 +390,7 @@ async function main() {
         category: ProductCategory.JOYERIA,
         status: ProductStatus.ACTIVE,
         stock: 12,
-        images: ['https://picsum.photos/400/400?random=308'],
+        images: ['/images/product_joyeria.png'],
       },
     }),
     prisma.product.create({
@@ -402,7 +402,7 @@ async function main() {
         category: ProductCategory.GASTRONOMIA,
         status: ProductStatus.ACTIVE,
         stock: 50,
-        images: ['https://picsum.photos/400/400?random=309'],
+        images: ['/images/product_chocolate.png'],
       },
     }),
     prisma.product.create({
@@ -414,7 +414,7 @@ async function main() {
         category: ProductCategory.TEXTIL,
         status: ProductStatus.ACTIVE,
         stock: 2,
-        images: ['/images/product_textiles.png'],
+        images: ['/images/textil_tapete_zapoteco.png'],
       },
     }),
   ]);
@@ -490,7 +490,7 @@ async function main() {
         viewerCount: 0,
         peakViewers: 892,
         vodUrl: 'https://example.com/vod/marimba',
-        thumbnailUrl: 'https://picsum.photos/800/450?random=405',
+        thumbnailUrl: '/images/poi_auditorio_guelaguetza.png',
       },
     }),
   ]);
@@ -527,7 +527,7 @@ async function main() {
         rating: 4.7,
         reviewCount: 1856,
         isVerified: true,
-        imageUrl: 'https://picsum.photos/600/400?random=502',
+        imageUrl: '/images/poi_santo_domingo.png',
       },
     }),
     prisma.pointOfInterest.create({
@@ -555,7 +555,7 @@ async function main() {
         rating: 4.5,
         reviewCount: 567,
         isVerified: true,
-        imageUrl: 'https://picsum.photos/600/400?random=504',
+        imageUrl: '/images/product_mezcal.png',
       },
     }),
     prisma.pointOfInterest.create({
@@ -569,7 +569,7 @@ async function main() {
         rating: 4.6,
         reviewCount: 1234,
         isVerified: true,
-        imageUrl: 'https://picsum.photos/600/400?random=505',
+        imageUrl: '/images/product_alebrije.png',
       },
     }),
     prisma.pointOfInterest.create({
@@ -611,7 +611,7 @@ async function main() {
         rating: 4.2,
         reviewCount: 89,
         isVerified: true,
-        imageUrl: 'https://picsum.photos/600/400?random=508',
+        imageUrl: '/images/poi_auditorio_guelaguetza.png',
       },
     }),
     prisma.pointOfInterest.create({
@@ -625,7 +625,7 @@ async function main() {
         rating: 4.7,
         reviewCount: 876,
         isVerified: true,
-        imageUrl: 'https://picsum.photos/600/400?random=509',
+        imageUrl: '/images/product_barro_negro.png',
       },
     }),
     prisma.pointOfInterest.create({
@@ -639,7 +639,7 @@ async function main() {
         rating: 4.8,
         reviewCount: 1243,
         isVerified: true,
-        imageUrl: 'https://picsum.photos/600/400?random=510',
+        imageUrl: '/images/product_textiles.png',
       },
     }),
   ]);
@@ -759,8 +759,8 @@ async function main() {
         languages: ['Espanol', 'Ingles'],
         rating: 4.9,
         reviewCount: 178,
-        imageUrl: 'https://picsum.photos/600/400?random=611',
-        images: ['https://picsum.photos/600/400?random=612', 'https://picsum.photos/600/400?random=613'],
+        imageUrl: '/images/poi_santo_domingo.png',
+        images: ['/images/poi_santo_domingo.png', '/images/product_barro_negro.png'],
       },
     }),
     prisma.experience.create({

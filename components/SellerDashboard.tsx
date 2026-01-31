@@ -88,7 +88,7 @@ const MOCK_SELLER_PRODUCTS = [
     stock: 25,
     sales: 156,
     views: 3421,
-    image: '',
+    image: '/images/product_chocolate.png',
     category: 'GASTRONOMIA',
     rating: 4.9,
   },
