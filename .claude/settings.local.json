@@ -84,7 +84,11 @@
       "Bash(docker ps:*)",
       "Bash(docker exec:*)",
       "Bash(PGPASSWORD=password psql:*)",
-      "Bash(PGPASSWORD=postgres psql:*)"
+      "Bash(PGPASSWORD=postgres psql:*)",
+      "Bash(pip3 install:*)",
+      "Bash(source .venv/bin/activate)",
+      "Bash(pip install:*)",
+      "Bash(python generate-pptx.py:*)"
     ]
   }
 }

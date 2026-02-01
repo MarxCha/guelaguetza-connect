@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Calendar, PlayCircle, Camera, X, ChevronRight, Utensils, Wine, Coffee, IceCream, MessageCircle, Sparkles, ShoppingBag, Radio, Ticket, Map, Search, Users, CalendarDays, User, Heart, ChevronLeft, Star, Navigation, ExternalLink, Clock } from 'lucide-react';
+import { MapPin, Calendar, PlayCircle, Camera, X, ChevronRight, Utensils, Wine, Coffee, IceCream, MessageCircle, Sparkles, ShoppingBag, Ticket, Search, Users, CalendarDays, User, Heart, ChevronLeft, Star, Navigation, ExternalLink, Clock } from 'lucide-react';
 import { ViewState } from '../types';
 import { getWishlistCount } from '../services/marketplace';
 import { useLanguage, LanguageSelector } from '../contexts/LanguageContext';
@@ -295,9 +295,7 @@ const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
                   onClick={() => setView(ViewState.STREAMS)}
                   className="flex flex-col items-center p-3 md:p-4 bg-red-50 dark:bg-red-900/20 rounded-2xl cursor-pointer hover:bg-red-100 transition active:scale-95"
                 >
-                  <div className="bg-red-500 w-11 h-11 md:w-14 md:h-14 rounded-full flex items-center justify-center text-white mb-2">
-                    <Radio size={22} className="md:w-7 md:h-7" />
-                  </div>
+                  <img src="/images/ui/icon_live.png" alt="En Vivo" className="w-11 h-11 md:w-14 md:h-14 object-contain mb-2 drop-shadow-sm" />
                   <span className="text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300">{t('streams')}</span>
                 </div>
 
@@ -313,9 +311,7 @@ const HomeView: React.FC<HomeViewProps> = ({ setView }) => {
                   onClick={() => setView(ViewState.SMART_MAP)}
                   className="flex flex-col items-center p-3 md:p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl cursor-pointer hover:bg-emerald-100 transition active:scale-95"
                 >
-                  <div className="bg-emerald-500 w-11 h-11 md:w-14 md:h-14 rounded-full flex items-center justify-center text-white mb-2">
-                    <Map size={22} className="md:w-7 md:h-7" />
-                  </div>
+                  <img src="/images/ui/icon_plan.png" alt="Planificar" className="w-11 h-11 md:w-14 md:h-14 object-contain mb-2 drop-shadow-sm" />
                   <span className="text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300">{t('plan')}</span>
                 </div>
               </div>

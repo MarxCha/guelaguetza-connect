@@ -21,7 +21,7 @@
     "Dark mode"
   ],
   "currentBranch": "main",
-  "lastCommit": "f09b256",
+  "lastCommit": "07e1285",
   "testsStatus": "349 pass, 0 fail",
   "knownIssues": [
     "Navegacion Single View State puede tener problemas de escalabilidad",
@@ -31,12 +31,14 @@
     "Sprint 1-3: Hardening, seguridad, DevOps",
     "Sprint B-D: Eventos, Sentry, cookies, arquitectura",
     "Sprint 1.1-3.1: Plan de remediacion",
-    "Sprint 4.1: Imagenes frontend, paleta, i18n"
+    "Sprint 4.1: Imagenes frontend, paleta, i18n",
+    "Sprint 4.2: Local assets migration + custom icons (live, plan)"
   ],
   "nextSteps": [
     "Integrar imagenes restantes (monte_alban, santo_domingo, barro_negro, textiles) en componentes",
     "Evaluar migracion de navegacion (router)",
-    "Continuar refinamiento UI/UX"
+    "Continuar refinamiento UI/UX",
+    "Commit pendiente: icon_live + icon_plan integration"
   ],
-  "lastUpdated": "2026-01-30"
+  "lastUpdated": "2026-01-31"
 }
